@@ -50,6 +50,13 @@ export function unpublish(): Promise<void> {
 }
 
 /**
+ * Checks if the User has given Bluetooth Permission. If not yet asked, a "grant permission?" dialog will pop up.
+ */
+export function checkBluetoothPermission(): Promise<boolean> {
+    return GoogleNearbyMessages.checkBluetoothPermission();
+}
+
+/**
  * Subscribe to new messages (Uses EventEmitterSubscription for the MESSAGE_FOUND event)
  * @param callback The function to call when a new message has been found
  * @returns A function to unsubscribe (call on unmount)
@@ -64,7 +71,7 @@ export function onMessageFound(callback: (message: string) => void): () => void 
  * @returns A function to unsubscribe (call on unmount)
  */
 export function onMessageLost(callback: (message: string) => void): () => void {
-    return onEvent('MESSAGE_FOUND', callback);
+    return onEvent('MESSAGE_LOST', callback);
 }
 
 /**
@@ -77,9 +84,13 @@ export function onError(callback: (kind: 'BLUETOOTH_ERROR' | 'PERMISSION_ERROR',
     return () => {
         bluetoothErrorUnsubscribe();
         permissionErrorUnsubscribe();
-    }
+    };
 }
 
 function onEvent(event: EventType, callback: (message: string) => void): () => void {
-    return nearbyEventEmitter.addListener(event, callback).remove;
+    const subscription = nearbyEventEmitter.addListener(event, callback);
+    return () => {
+        console.log(`removing ${event}`)
+        subscription.remove();
+    }
 }

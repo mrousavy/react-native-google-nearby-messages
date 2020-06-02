@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "android": "cd .. && tsc --noEmit false && rm -rf node_modules && cd example && rm -rf node_modules && yarn && react-native run-android",
-    "ios": "cd .. && tsc --noEmit false && rm -rf node_modules && cd example && rm -rf node_modules && yarn && cd ios && pod install && cd .. && react-native run-ios",
+    "android": "rm -rf node_modules && yarn && react-native run-android",
+    "ios": "rm -rf node_modules && yarn && cd ios && pod install && cd .. && react-native run-ios",
     "start": "react-native start",
     "test": "jest",
     "lint": "eslint ."

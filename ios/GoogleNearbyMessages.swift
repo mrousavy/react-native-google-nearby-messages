@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import GNSMessages
 
 @objc(NearbyMessages)
 class NearbyMessages: NSObject {
@@ -18,10 +19,12 @@ class NearbyMessages: NSObject {
 	}
 	
 	@objc
-	func increment() {
-		count += 1
-		print("count is \(count)")
+	func connect(apiKey: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> GNSMessageManager {
+		let messageManager = GNSMessageManager(APIKey: apiKey)
+		return messageManager
 	}
+	
+	// TODO: https://developers.google.com/nearby/messages/ios/pub-sub#swift
 	
 	@objc
 	static func requiresMainQueueSetup() -> Bool {

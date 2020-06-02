@@ -44,9 +44,8 @@ class NearbyMessages: RCTEventEmitter {
 	
 	@objc(connect:resolver:rejecter:)
 	func connect(_ apiKey: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
-		print("CUSTOM_DEBUG: Connect call...")
 		// TODO: remove debug logging
-		GNSMessageManager.setDebugLoggingEnabled(true)
+		//GNSMessageManager.setDebugLoggingEnabled(true)
 		
 		self.messageManager = GNSMessageManager(apiKey: apiKey,
 												paramsBlock: { (params: GNSMessageManagerParams?) in
@@ -66,7 +65,6 @@ class NearbyMessages: RCTEventEmitter {
 	
 	@objc
 	func disconnect() -> Void {
-		print("CUSTOM_DEBUG: Disconnect call...")
 		self.currentSubscription = nil
 		self.currentPublication = nil
 		self.messageManager = nil
@@ -74,7 +72,6 @@ class NearbyMessages: RCTEventEmitter {
 	
 	@objc(publish:resolver:rejecter:)
 	func publish(_ message: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
-		print("CUSTOM_DEBUG: Publish call...")
 		do {
 			if (self.messageManager == nil) {
 				throw GoogleNearbyMessagesError.runtimeError(message: "Google Nearby Messages is not connected! Call connect() before any other calls.")
@@ -96,20 +93,17 @@ class NearbyMessages: RCTEventEmitter {
 	
 	@objc
 	func unpublish() -> Void {
-		print("CUSTOM_DEBUG: Unpublish call...")
 		self.currentPublication = nil
 	}
 	
 	@objc(subscribe:rejecter:)
 	func subscribe(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
-		print("CUSTOM_DEBUG: Subscribe call...")
 		do {
 			if (self.messageManager == nil) {
 				throw GoogleNearbyMessagesError.runtimeError(message: "Google Nearby Messages is not connected! Call connect() before any other calls.")
 			}
 			self.currentSubscription = self.messageManager!.subscription(
 				messageFoundHandler: { (message: GNSMessage?) in
-					print("CUSTOM_DEBUG: FOUND MESSAGE! \(message)")
 					guard let data = message?.content else {
 						self.sendEvent(withName: EventType.MESSAGE_NO_DATA_ERROR.rawValue, body: [ "error" : "Message does not have any Data!" ] )
 						return
@@ -117,7 +111,6 @@ class NearbyMessages: RCTEventEmitter {
 					self.sendEvent(withName: EventType.MESSAGE_FOUND.rawValue, body: [ "message": String(data: data, encoding: .utf8) ]);
 				},
 				messageLostHandler: { (message: GNSMessage?) in
-					print("CUSTOM_DEBUG: LOST MESSAGE! \(message)")
 					guard let data = message?.content else {
 						self.sendEvent(withName: EventType.MESSAGE_NO_DATA_ERROR.rawValue, body: [ "error" : "Message does not have any Data!" ] )
 						return
@@ -140,7 +133,6 @@ class NearbyMessages: RCTEventEmitter {
 	
 	@objc
 	func unsubscribe() -> Void {
-		print("CUSTOM_DEBUG: Unsubscribe call...")
 		self.currentSubscription = nil
 	}
 	

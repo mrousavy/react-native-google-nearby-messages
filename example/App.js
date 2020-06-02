@@ -13,13 +13,9 @@ import {StyleSheet, Text, View, Alert} from 'react-native';
 import {
   connect,
   publish,
-  onError,
   subscribe,
-  onMessageFound,
-  onMessageLost,
   checkBluetoothPermission,
-  unsubscribe,
-  unpublish,
+  addOnErrorListener,
 } from 'react-native-google-nearby-messages';
 
 
@@ -32,7 +28,7 @@ export default class App extends Component {
 
   componentDidMount() {
     this.listeners.push(
-      onError((k, m) => {
+      addOnErrorListener((k, m) => {
         console.error(`${k}: ${m}`);
         Alert.alert('Error!', `${k}: ${m}`);
       }),
@@ -62,17 +58,9 @@ export default class App extends Component {
         },
       ],
     );
-
-    setTimeout(() => {
-      this.componentWillUnmount();
-    }, 5000);
   }
 
   componentWillUnmount() {
-    console.log('unpublishing...');
-    unpublish();
-    console.log('unsubscribing...');
-    unsubscribe();
     this.listeners.forEach((l) => {
       console.log(`unsubscribing listener ${l}`);
       if (l) {
@@ -82,30 +70,29 @@ export default class App extends Component {
   }
 
   async publish() {
-    await connect(API_KEY);
-    await publish('TEST');
+    this.listeners.push(await connect(API_KEY));
+    this.listeners.push(await publish('TEST'));
     this.setState({
       status: 'Published!',
     });
   }
 
   async subscribe() {
-    await connect(API_KEY);
+    this.listeners.push(await connect(API_KEY));
     this.listeners.push(
-      onMessageFound((m) => {
-        this.setState({
-          message: `Found: ${JSON.stringify(m)}`,
-        });
-      }),
+      await subscribe(
+        (m) => {
+          this.setState({
+            message: `Found: ${JSON.stringify(m)}`,
+          });
+        },
+        (m) => {
+          this.setState({
+            message: `Lost: ${JSON.stringify(m)}`,
+          });
+        },
+      ),
     );
-    this.listeners.push(
-      onMessageLost((m) => {
-        this.setState({
-          message: `Lost: ${JSON.stringify(m)}`,
-        });
-      }),
-    );
-    await subscribe();
     this.setState({
       status: 'Subscribed!',
     });

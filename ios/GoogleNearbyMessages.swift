@@ -44,6 +44,7 @@ class NearbyMessages: RCTEventEmitter {
 	
 	@objc(connect:resolver:rejecter:)
 	func connect(_ apiKey: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
+		print("CUSTOM_DEBUG: Connect call...")
 		// TODO: remove debug logging
 		GNSMessageManager.setDebugLoggingEnabled(true)
 		
@@ -51,28 +52,29 @@ class NearbyMessages: RCTEventEmitter {
 												paramsBlock: { (params: GNSMessageManagerParams?) in
 													guard let params = params else { return }
 													params.microphonePermissionErrorHandler = { (hasError: Bool) in
-														self.sendEvent(withName: EventType.PERMISSION_ERROR.rawValue, body: [ "error": "microphone" ]);
+														self.sendEvent(withName: EventType.PERMISSION_ERROR.rawValue, body: [ "hasError": hasError ]);
 													}
 													params.bluetoothPowerErrorHandler = { (hasError: Bool) in
-														self.sendEvent(withName: EventType.BLUETOOTH_ERROR.rawValue, body: [ "error": "hasError: \(hasError)" ]);
+														self.sendEvent(withName: EventType.BLUETOOTH_ERROR.rawValue, body: [ "hasError": hasError ]);
 													}
 													params.bluetoothPermissionErrorHandler = { (hasError: Bool) in
-														self.sendEvent(withName: EventType.PERMISSION_ERROR.rawValue, body: [ "error": "bluetooth" ]);
+														self.sendEvent(withName: EventType.PERMISSION_ERROR.rawValue, body: [ "hasError": hasError ]);
 													}
 		})
 		resolve(nil)
 	}
 	
-	@objc(disconnect:rejecter:)
-	func disconnect(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
+	@objc
+	func disconnect() -> Void {
+		print("CUSTOM_DEBUG: Disconnect call...")
 		self.currentSubscription = nil
 		self.currentPublication = nil
 		self.messageManager = nil
-		resolve(nil)
 	}
 	
 	@objc(publish:resolver:rejecter:)
 	func publish(_ message: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
+		print("CUSTOM_DEBUG: Publish call...")
 		do {
 			if (self.messageManager == nil) {
 				throw GoogleNearbyMessagesError.runtimeError(message: "Google Nearby Messages is not connected! Call connect() before any other calls.")
@@ -83,7 +85,7 @@ class NearbyMessages: RCTEventEmitter {
 				  params.strategy = GNSStrategy(paramsBlock: { (params: GNSStrategyParams?) in
 					guard let params = params else { return }
 					params.discoveryMediums = .BLE
-					params.discoveryMode = .broadcast
+					//params.discoveryMode = .broadcast
 				  })
 				})
 			resolve(nil)
@@ -92,20 +94,22 @@ class NearbyMessages: RCTEventEmitter {
 		}
 	}
 	
-	@objc(unpublish:rejecter:)
-	func unpublish(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
+	@objc
+	func unpublish() -> Void {
+		print("CUSTOM_DEBUG: Unpublish call...")
 		self.currentPublication = nil
-		resolve(nil)
 	}
 	
 	@objc(subscribe:rejecter:)
 	func subscribe(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
+		print("CUSTOM_DEBUG: Subscribe call...")
 		do {
 			if (self.messageManager == nil) {
 				throw GoogleNearbyMessagesError.runtimeError(message: "Google Nearby Messages is not connected! Call connect() before any other calls.")
 			}
 			self.currentSubscription = self.messageManager!.subscription(
 				messageFoundHandler: { (message: GNSMessage?) in
+					print("CUSTOM_DEBUG: FOUND MESSAGE! \(message)")
 					guard let data = message?.content else {
 						self.sendEvent(withName: EventType.MESSAGE_NO_DATA_ERROR.rawValue, body: [ "error" : "Message does not have any Data!" ] )
 						return
@@ -113,6 +117,7 @@ class NearbyMessages: RCTEventEmitter {
 					self.sendEvent(withName: EventType.MESSAGE_FOUND.rawValue, body: [ "message": String(data: data, encoding: .utf8) ]);
 				},
 				messageLostHandler: { (message: GNSMessage?) in
+					print("CUSTOM_DEBUG: LOST MESSAGE! \(message)")
 					guard let data = message?.content else {
 						self.sendEvent(withName: EventType.MESSAGE_NO_DATA_ERROR.rawValue, body: [ "error" : "Message does not have any Data!" ] )
 						return
@@ -124,7 +129,7 @@ class NearbyMessages: RCTEventEmitter {
 				  params.strategy = GNSStrategy(paramsBlock: { (params: GNSStrategyParams?) in
 					guard let params = params else { return }
 					params.discoveryMediums = .BLE
-					params.discoveryMode = .scan
+					//params.discoveryMode = .scan
 				  })
 				})
 			resolve(nil)
@@ -133,10 +138,10 @@ class NearbyMessages: RCTEventEmitter {
 		}
 	}
 	
-	@objc(unsubscribe:rejecter:)
-	func unsubscribe(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
+	@objc
+	func unsubscribe() -> Void {
+		print("CUSTOM_DEBUG: Unsubscribe call...")
 		self.currentSubscription = nil
-		resolve(nil)
 	}
 	
 	@objc(checkBluetoothPermission:rejecter:)

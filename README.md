@@ -15,24 +15,26 @@ npm i react-native-google-nearby-messages
 ### Publishing
 
 ```ts
-import { connect, publish, unpublish, onError } from 'react-native-google-nearby-messages';
+import { connect, publish, addOnErrorListener } from 'react-native-google-nearby-messages';
 
-onError((kind, error) => console.error(`${kind}: ${error}`));
-await connect('<yourAPIkey>'); // API Key not needed in Android, add to Manifest instead!
-await publish('hello !');
+const removeListener = addOnErrorListener((kind, hasError) => console.error(`${kind}: ${hasError}`));
+const disconnect = await connect('<yourAPIkey>'); // API Key not needed in Android, add to Manifest instead!
+const unpublish = await publish('hello !');
 
 // later, e.g. in componentWillUnmount()
-await unpublish();
+removeListener();
+unpublish();
+disconnect();
 ```
 
 ### Subscribing
 
 ```ts
-import { connect, subscribe, unsubscribe, onError } from 'react-native-google-nearby-messages';
+import { connect, subscribe, unsubscribe, addOnErrorListener } from 'react-native-google-nearby-messages';
 
-onError((kind, error) => console.error(`${kind}: ${error}`));
-await connect('<yourAPIkey>'); // API Key not needed in Android, add to Manifest instead!
-const removeListener = await subscribe(
+addOnErrorListener((kind, hasError) => console.error(`${kind}: ${hasError}`));
+const disconnect = await connect('<yourAPIkey>'); // API Key not needed in Android, add to Manifest instead!
+const unsubscribe = await subscribe(
   (m) => {
     console.log(`new message found: ${m}`);
   },
@@ -42,7 +44,8 @@ const removeListener = await subscribe(
 
 // later, e.g. in componentWillUnmount()
 removeListener();
-await unsubscribe();
+unsubscribe();
+disconnect();
 ```
 
 ### Bluetooth Permissions

@@ -13,11 +13,11 @@
 @interface RCT_EXTERN_REMAP_MODULE(GoogleNearbyMessages, NearbyMessages, NSObject)
 
 RCT_EXTERN_METHOD(connect:(NSString)apiKey resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject);
-RCT_EXTERN_METHOD(disconnect:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject);
+RCT_EXTERN_METHOD(disconnect);
 RCT_EXTERN_METHOD(publish:(NSString)message resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject);
-RCT_EXTERN_METHOD(unpublish:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject);
+RCT_EXTERN_METHOD(unpublish);
 RCT_EXTERN_METHOD(subscribe:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject);
-RCT_EXTERN_METHOD(unsubscribe:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject);
+RCT_EXTERN_METHOD(unsubscribe);
 RCT_EXTERN_METHOD(checkBluetoothPermission:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject);
 
 @end

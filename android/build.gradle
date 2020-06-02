@@ -73,6 +73,8 @@ repositories {
 dependencies {
     //noinspection GradleDynamicVersion
     implementation 'com.facebook.react:react-native:+'  // From node_modules
+    implementation 'com.google.android.gms:play-services-nearby:17.0.0'
+    implementation 'org.jetbrains:annotations-java5:15.0'
 }
 
 def configureReactNativePom(def pom) {

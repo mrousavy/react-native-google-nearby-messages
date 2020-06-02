@@ -1,4 +1,4 @@
-import { NativeModules, NativeEventEmitter } from 'react-native';
+import { NativeModules, NativeEventEmitter, Platform } from 'react-native';
 
 const { GoogleNearbyMessages } = NativeModules;
 const nearbyEventEmitter = new NativeEventEmitter(GoogleNearbyMessages);
@@ -15,7 +15,8 @@ interface BridgeErrorEvent {
  * Initialize and connect the Google Nearby Messages API
  * @param apiKey The Google API key to use (only required on iOS) - @see https://console.developers.google.com/flows/enableapi?apiid=copresence&keyType=CLIENT_SIDE_IOS&reusekey=true
  */
-export function connect(apiKey: string): Promise<void> {
+export function connect(apiKey?: string): Promise<void> {
+    if (Platform.OS === 'ios' && apiKey == null) throw new Error('API Key is required on iOS!');
     return GoogleNearbyMessages.connect(apiKey);
 }
 
@@ -28,9 +29,18 @@ export function disconnect(): Promise<void> {
 
 /**
  * Subscribe to nearby message events. Use onMessageFound and onMessageLost to receive callbacks for found and lost messages. Always call unsubscribe() to stop publishing.
+  * @param onMessageFound (Optional) A function to call when a new message has been found
+  * @param onMessageLost  (Optional) A function to call when an existing message has been lost
+ * @returns A function to unsubscribe the event emitters
  */
-export function subscribe(): Promise<() => void> {
-    return GoogleNearbyMessages.subscribe();
+export async function subscribe(onMessageFound?: (message?: string) => void, onMessageLost?: (message?: string) => void): Promise<() => void> {
+    await GoogleNearbyMessages.subscribe();
+    const onMessageFoundUnsubscribe = onMessageFound ? addOnMessageFoundListener(onMessageFound) : undefined;
+    const onMessageLostUnsubscribe = onMessageLost ? addOnMessageLostListener(onMessageLost) : undefined;
+    return () => {
+        if (onMessageFoundUnsubscribe) onMessageFoundUnsubscribe();
+        if (onMessageLostUnsubscribe) onMessageLostUnsubscribe();
+    };
 }
 
 /**
@@ -67,7 +77,7 @@ export function checkBluetoothPermission(): Promise<boolean> {
  * @param callback The function to call when a new message has been found
  * @returns A function to unsubscribe (call on unmount)
  */
-export function onMessageFound(callback: (message?: string) => void): () => void {
+export function addOnMessageFoundListener(callback: (message?: string) => void): () => void {
     return onEvent('MESSAGE_FOUND', callback);
 }
 
@@ -76,7 +86,7 @@ export function onMessageFound(callback: (message?: string) => void): () => void
  * @param callback The function to call when an existing message has been lost
  * @returns A function to unsubscribe (call on unmount)
  */
-export function onMessageLost(callback: (message?: string) => void): () => void {
+export function addOnMessageLostListener(callback: (message?: string) => void): () => void {
     return onEvent('MESSAGE_LOST', callback);
 }
 
@@ -84,7 +94,7 @@ export function onMessageLost(callback: (message?: string) => void): () => void 
  * Subscribe to any errors
  * @param callback The function to call when an error occurs
  */
-export function onError(callback: (kind: 'BLUETOOTH_ERROR' | 'PERMISSION_ERROR' | 'MESSAGE_NO_DATA_ERROR', error?: string) => void): () => void {
+export function addOnErrorListener(callback: (kind: 'BLUETOOTH_ERROR' | 'PERMISSION_ERROR' | 'MESSAGE_NO_DATA_ERROR', error?: string) => void): () => void {
     const bluetoothErrorUnsubscribe = onErrorEvent('BLUETOOTH_ERROR', (m) => callback('BLUETOOTH_ERROR', m));
     const permissionErrorUnsubscribe = onErrorEvent('PERMISSION_ERROR', (m) => callback('PERMISSION_ERROR', m));
     const messageNoDataErrorUnsubscribe = onErrorEvent('MESSAGE_NO_DATA_ERROR', (m) => callback('MESSAGE_NO_DATA_ERROR', m));

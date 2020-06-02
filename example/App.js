@@ -9,7 +9,7 @@
  */
 
 import React, {Component} from 'react';
-import {StyleSheet, Text, View, Alert} from 'react-native';
+import {StyleSheet, Text, View, Alert, Platform} from 'react-native';
 import {
   connect,
   publish,
@@ -70,7 +70,9 @@ export default class App extends Component {
   }
 
   async publish() {
-    this.listeners.push(await connect(API_KEY));
+    if (Platform.OS === 'ios') {
+      this.listeners.push(await connect(API_KEY));
+    }
     this.listeners.push(await publish('TEST'));
     this.setState({
       status: 'Published!',
@@ -78,7 +80,9 @@ export default class App extends Component {
   }
 
   async subscribe() {
-    this.listeners.push(await connect(API_KEY));
+    if (Platform.OS === 'ios') {
+      this.listeners.push(await connect(API_KEY));
+    }
     this.listeners.push(
       await subscribe(
         (m) => {

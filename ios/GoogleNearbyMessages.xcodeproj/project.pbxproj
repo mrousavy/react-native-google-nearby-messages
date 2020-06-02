@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B82FC4162486D95500005946 /* libGNSMessages.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B82FC4152486D95500005946 /* libGNSMessages.a */; };
 		B89424862486AF5900F22052 /* GoogleNearbyMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89424852486AF5900F22052 /* GoogleNearbyMessages.swift */; };
 		B89426132486B5E200F22052 /* GoogleNearbyMessagesBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = B89426122486B5E200F22052 /* GoogleNearbyMessagesBridge.m */; };
 /* End PBXBuildFile section */
@@ -25,6 +26,7 @@
 
 /* Begin PBXFileReference section */
 		134814201AA4EA6300B7C361 /* libGoogleNearbyMessages.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libGoogleNearbyMessages.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		B82FC4152486D95500005946 /* libGNSMessages.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libGNSMessages.a; path = ../example/ios/Pods/NearbyMessages/Libraries/libGNSMessages.a; sourceTree = "<group>"; };
 		B89424842486AF5800F22052 /* GoogleNearbyMessagesBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GoogleNearbyMessagesBridge.h; sourceTree = "<group>"; };
 		B89424852486AF5900F22052 /* GoogleNearbyMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleNearbyMessages.swift; sourceTree = "<group>"; };
 		B894248A2486B0CC00F22052 /* RCTImageLoader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RCTImageLoader.h; sourceTree = "<group>"; };
@@ -398,6 +400,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B82FC4162486D95500005946 /* libGNSMessages.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -426,6 +429,7 @@
 		B89424872486B0CC00F22052 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				B82FC4152486D95500005946 /* libGNSMessages.a */,
 				B89424882486B0CC00F22052 /* React */,
 			);
 			name = Frameworks;
@@ -1226,8 +1230,6 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
-					"$(SRCROOT)/../../../React/**",
-					"$(SRCROOT)/../../react-native/React/**",
 				);
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
@@ -1237,6 +1239,7 @@
 				SWIFT_OBJC_BRIDGING_HEADER = GoogleNearbyMessagesBridge.h;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
+				SYSTEM_HEADER_SEARCH_PATHS = "$(SRCROOT)/../node_modules/react-native/** $(SRCROOT)/../example/ios/Pods/Headers/Public/**";
 			};
 			name = Debug;
 		};
@@ -1247,8 +1250,6 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
-					"$(SRCROOT)/../../../React/**",
-					"$(SRCROOT)/../../react-native/React/**",
 				);
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
@@ -1257,6 +1258,7 @@
 				SKIP_INSTALL = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = GoogleNearbyMessagesBridge.h;
 				SWIFT_VERSION = 5.0;
+				SYSTEM_HEADER_SEARCH_PATHS = "$(SRCROOT)/../node_modules/react-native/** $(SRCROOT)/../example/ios/Pods/Headers/Public/**";
 			};
 			name = Release;
 		};

@@ -7,7 +7,8 @@
 //
 
 #import "GoogleNearbyMessagesBridge.h"
-#import <RCTBridgeModule.h>
+#import "RCTBridgeModule.h"
+#import "RCTEventEmitter.h"
 
 @interface RCT_EXTERN_REMAP_MODULE(GoogleNearbyMessages, NearbyMessages, NSObject)
 

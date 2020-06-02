@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import GNSMessages
 
 @objc(NearbyMessages)
 class NearbyMessages: RCTEventEmitter {
@@ -22,12 +21,12 @@ class NearbyMessages: RCTEventEmitter {
 	}
 
 	
-	private var messageManager: GNSMessageManager = nil
-	private var currentPublication = nil
-	private var currentSubscription = nil
+	private var messageManager: GNSMessageManager? = nil
+	private var currentPublication: GNSPublication? = nil
+	private var currentSubscription: GNSSubscription? = nil
 	
 	@objc(constantsToExport)
-	public func constantsToExport() -> [AnyHashable : Any]! {
+	override public func constantsToExport() -> [AnyHashable : Any]! {
 	  return ["initialCount": 0]
 	}
 	
@@ -42,27 +41,23 @@ class NearbyMessages: RCTEventEmitter {
 				throw GoogleNearbyMessagesError.runtimeError("BLE Permission denied!")
 			}
 			
-			self.messageManager = GNSMessageManager(APIKey: apiKey,
+			self.messageManager = GNSMessageManager(apiKey: apiKey,
 													paramsBlock: { (params: GNSMessageManagerParams?) in
 														guard let params = params else { return }
 														params.microphonePermissionErrorHandler = { (hasError: Bool) in
-															sendEvent(withName: EventType.PERMISSION_ERROR.rawValue, body: [ "permission": "microphone" ]);
+															self.sendEvent(withName: EventType.PERMISSION_ERROR.rawValue, body: [ "permission": "microphone" ]);
 														}
 														params.bluetoothPowerErrorHandler = { (hasError: Bool) in
-															sendEvent(withName: EventType.BLE_ERROR.rawValue, body: [ "hasError": hasError ]);
+															self.sendEvent(withName: EventType.BLUETOOTH_ERROR.rawValue, body: [ "hasError": hasError ]);
 														}
 														params.bluetoothPermissionErrorHandler = { (hasError: Bool) in
-															sendEvent(withName: EventType.PERMISSION_ERROR.rawValue, body: [ "message": "bluetooth" ]);
+															self.sendEvent(withName: EventType.PERMISSION_ERROR.rawValue, body: [ "message": "bluetooth" ]);
 														}
-														params.strategy = GNSStrategy(paramsBlock: { (params: GNSStrategyParams?) in
-															guard let params = params else { return }
-															// TODO: currently it only supports BLE. Maybe support more?
-															params.discoveryMediums = .BLE
-														})
+														// TODO: Strategy to use BLE only
 			})
 			resolve(nil)
 		} catch {
-			reject(error)
+			reject("error", "error description", error)
 		}
 	}
 	
@@ -77,10 +72,13 @@ class NearbyMessages: RCTEventEmitter {
 	@objc
 	func publish(message: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
 		do {
-			self.currentPublication = try self.messageManager.publication(with: GNSMessage(content: message.data(using: .utf8)))
+			if (self.messageManager == nil) {
+				throw GoogleNearbyMessagesError.runtimeError("Google Nearby Messages is not connected! Call connect() before any other calls.")
+			}
+			self.currentPublication = self.messageManager!.publication(with: GNSMessage(content: message.data(using: .utf8)))
 			resolve(nil)
 		} catch {
-			reject(error)
+			reject("error", "error description", error)
 		}
 	}
 	
@@ -93,16 +91,19 @@ class NearbyMessages: RCTEventEmitter {
 	@objc
 	func subscribe(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
 		do {
-			self.currentSubscription = messageManager.subscription(
+			if (self.messageManager == nil) {
+				throw GoogleNearbyMessagesError.runtimeError("Google Nearby Messages is not connected! Call connect() before any other calls.")
+			}
+			self.currentSubscription = self.messageManager!.subscription(
 				messageFoundHandler: { (message: GNSMessage?) in
-					sendEvent(withName: EventType.MESSAGE_FOUND.rawValue, body: [ "message": message ]);
+					self.sendEvent(withName: EventType.MESSAGE_FOUND.rawValue, body: [ "message": message ]);
 				},
 				messageLostHandler: { (message: GNSMessage?) in
-				sendEvent(withName: EventType.MESSAGE_LOST.rawValue, body: [ "message": message ]);
+					self.sendEvent(withName: EventType.MESSAGE_LOST.rawValue, body: [ "message": message ]);
 				})
 			resolve(nil)
 		} catch {
-			reject(error)
+			reject("error", "error description", error)
 		}
 	}
 	
@@ -117,7 +118,7 @@ class NearbyMessages: RCTEventEmitter {
 	}
 	
 	@objc
-	static func requiresMainQueueSetup() -> Bool {
+	override static func requiresMainQueueSetup() -> Bool {
 		// init on background thread
 		return false
 	}

@@ -10,7 +10,7 @@
 
 import React, {Component} from 'react';
 import {Platform, StyleSheet, Text, View} from 'react-native';
-import NBincrement from 'react-native-google-nearby-messages';
+import GoogleNearbyMessages from 'react-native-google-nearby-messages';
 
 export default class App extends Component<{}> {
   state = {
@@ -18,7 +18,9 @@ export default class App extends Component<{}> {
     message: '--',
   };
   componentDidMount() {
-    console.log(NBincrement());
+    const nearby = GoogleNearbyMessages();
+    console.log(nearby.connect());
+    console.log(nearby.publish('ay'));
   }
 
   render() {

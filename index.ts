@@ -1,23 +1,29 @@
-import { NativeModules } from 'react-native';
+import { NativeModules, NativeEventEmitter } from 'react-native';
 
 const { GoogleNearbyMessages } = NativeModules;
+const nearbyEventEmitter = new NativeEventEmitter(GoogleNearbyMessages);
+
+export type EventType = 'MESSAGE_FOUND' | 'MESSAGE_LOST' | 'BLUETOOTH_ERROR' | 'PERMISSION_ERROR';
 
 export namespace NearbyMessages {
     const callbacks: ((message: string) => void)[] = [];
 
-    function subscribe(callback: (message: string) => void): Promise<void> {
+    function connect(): Promise<void> {
         console.log('Nearby Messages invoked. Native Module: ', GoogleNearbyMessages);
-        callbacks.push(callback);
-        // TODO: register callback
+        return GoogleNearbyMessages.connect();
+    }
+
+    function disconnect(): Promise<void> {
+        return GoogleNearbyMessages.disconnect();
+    }
+
+    function subscribe(): Promise<() => void> {
+        console.log('Nearby Messages invoked. Native Module: ', GoogleNearbyMessages);
         return GoogleNearbyMessages.subscribe();
     }
 
     function unsubscribe(callback: (message: string) => void): Promise<void> {
         console.log('Nearby Messages invoked. Native Module: ', GoogleNearbyMessages);
-        const index = callbacks.findIndex(c => c === callback);
-        if (index < 1) throw new Error('The supplied callback is not subscribed!');
-        callbacks.splice(index, 1);
-        // TODO: remove callback
         return GoogleNearbyMessages.unsubscribe();
     }
 
@@ -29,5 +35,17 @@ export namespace NearbyMessages {
     function unpublish(): Promise<void> {
         console.log('Nearby Messages invoked. Native Module: ', GoogleNearbyMessages);
         return GoogleNearbyMessages.unpublish();
+    }
+
+    function onMessageFound(callback: (message: string) => void) {
+        return onEvent('MESSAGE_FOUND', callback);
+    }
+
+    function onMessageLost(callback: (message: string) => void) {
+        return onEvent('MESSAGE_FOUND', callback);
+    }
+
+    function onEvent(event: EventType, callback: (message: string) => void) {
+        return nearbyEventEmitter.addListener(event, callback);
     }
 }

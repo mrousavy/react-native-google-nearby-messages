@@ -3,7 +3,9 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <GNSMessages.h>
+#import "RCTBridgeModule.h"
+#import "RCTEventEmitter.h"
+#import "GNSMessages.h"
 
 @interface GoogleNearbyMessagesBridge: NSObject
 @end

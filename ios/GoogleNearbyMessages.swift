@@ -11,7 +11,7 @@ import CoreBluetooth
 
 @objc(NearbyMessages)
 class NearbyMessages: RCTEventEmitter {
-	enum EventType: String {
+	enum EventType: String, CaseIterable {
 		case MESSAGE_FOUND
 		case MESSAGE_LOST
 		case BLUETOOTH_ERROR
@@ -156,7 +156,9 @@ class NearbyMessages: RCTEventEmitter {
 	}
 	
 	override func supportedEvents() -> [String]! {
-		return ["MESSAGE_FOUND", "MESSAGE_LOST", "BLUETOOTH_ERROR", "PERMISSION_ERROR"]
+		return EventType.allCases.map { (event: EventType) -> String in
+			return event.rawValue
+		}
 	}
 	
 	@objc

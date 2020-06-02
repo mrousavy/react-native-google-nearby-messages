@@ -16,8 +16,18 @@ class NearbyMessages: RCTEventEmitter {
 		case BLUETOOTH_ERROR
 		case PERMISSION_ERROR
 	}
-	enum GoogleNearbyMessagesError: Error {
-		case runtimeError(String)
+	enum GoogleNearbyMessagesError: Error, LocalizedError {
+		case permissionError(permissionName: String)
+		case runtimeError(message: String)
+		
+		public var errorDescription: String? {
+			switch self {
+			case .permissionError(permissionName: let permissionName):
+				return "Permission has been denied! Denied Permission: \(permissionName). Make sure to include NSBluetoothPeripheralUsageDescription in your Info.plist!"
+			case .runtimeError(message: let message):
+				return message
+			}
+		}
 	}
 
 	
@@ -38,7 +48,7 @@ class NearbyMessages: RCTEventEmitter {
 			
 			let hasPermission = GNSPermission.isGranted()
 			if (!hasPermission) {
-				throw GoogleNearbyMessagesError.runtimeError("BLE Permission denied!")
+				throw GoogleNearbyMessagesError.permissionError(permissionName: "Bluetooth/Microphone")
 			}
 			
 			self.messageManager = GNSMessageManager(apiKey: apiKey,
@@ -57,7 +67,7 @@ class NearbyMessages: RCTEventEmitter {
 			})
 			resolve(nil)
 		} catch {
-			reject("error", "error description", error)
+			reject("GOOGLE_NEARBY_MESSAGES_ERROR_CONNECT", error.localizedDescription, error)
 		}
 	}
 	
@@ -73,12 +83,20 @@ class NearbyMessages: RCTEventEmitter {
 	func publish(_ message: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
 		do {
 			if (self.messageManager == nil) {
-				throw GoogleNearbyMessagesError.runtimeError("Google Nearby Messages is not connected! Call connect() before any other calls.")
+				throw GoogleNearbyMessagesError.runtimeError(message: "Google Nearby Messages is not connected! Call connect() before any other calls.")
 			}
-			self.currentPublication = self.messageManager!.publication(with: GNSMessage(content: message.data(using: .utf8)))
+			self.currentPublication = self.messageManager!.publication(with: GNSMessage(content: message.data(using: .utf8)),
+				paramsBlock: { (params: GNSPublicationParams?) in
+				  guard let params = params else { return }
+				  params.strategy = GNSStrategy(paramsBlock: { (params: GNSStrategyParams?) in
+					guard let params = params else { return }
+					params.discoveryMediums = .BLE
+					params.discoveryMode = .broadcast
+				  })
+				})
 			resolve(nil)
 		} catch {
-			reject("error", "error description", error)
+			reject("GOOGLE_NEARBY_MESSAGES_ERROR_PUBLISH", error.localizedDescription, error)
 		}
 	}
 	
@@ -92,7 +110,7 @@ class NearbyMessages: RCTEventEmitter {
 	func subscribe(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
 		do {
 			if (self.messageManager == nil) {
-				throw GoogleNearbyMessagesError.runtimeError("Google Nearby Messages is not connected! Call connect() before any other calls.")
+				throw GoogleNearbyMessagesError.runtimeError(message: "Google Nearby Messages is not connected! Call connect() before any other calls.")
 			}
 			self.currentSubscription = self.messageManager!.subscription(
 				messageFoundHandler: { (message: GNSMessage?) in
@@ -100,10 +118,18 @@ class NearbyMessages: RCTEventEmitter {
 				},
 				messageLostHandler: { (message: GNSMessage?) in
 					self.sendEvent(withName: EventType.MESSAGE_LOST.rawValue, body: [ "message": message ]);
+				},
+				paramsBlock: { (params: GNSSubscriptionParams?) in
+				  guard let params = params else { return }
+				  params.strategy = GNSStrategy(paramsBlock: { (params: GNSStrategyParams?) in
+					guard let params = params else { return }
+					params.discoveryMediums = .BLE
+					params.discoveryMode = .scan
+				  })
 				})
 			resolve(nil)
 		} catch {
-			reject("error", "error description", error)
+			reject("GOOGLE_NEARBY_MESSAGES_ERROR_SUBSCRIBE", error.localizedDescription, error)
 		}
 	}
 	

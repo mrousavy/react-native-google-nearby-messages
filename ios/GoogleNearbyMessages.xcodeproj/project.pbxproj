@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		B89424832486AF1D00F22052 /* GoogleNearbyMessages.m in Sources */ = {isa = PBXBuildFile; fileRef = B89424822486AF1D00F22052 /* GoogleNearbyMessages.m */; };
 		B89424862486AF5900F22052 /* GoogleNearbyMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89424852486AF5900F22052 /* GoogleNearbyMessages.swift */; };
+		B89426132486B5E200F22052 /* GoogleNearbyMessagesBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = B89426122486B5E200F22052 /* GoogleNearbyMessagesBridge.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,9 +25,7 @@
 
 /* Begin PBXFileReference section */
 		134814201AA4EA6300B7C361 /* libGoogleNearbyMessages.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libGoogleNearbyMessages.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		B89424812486AF1D00F22052 /* GoogleNearbyMessages.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GoogleNearbyMessages.h; sourceTree = "<group>"; };
-		B89424822486AF1D00F22052 /* GoogleNearbyMessages.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GoogleNearbyMessages.m; sourceTree = "<group>"; };
-		B89424842486AF5800F22052 /* GoogleNearbyMessages-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "GoogleNearbyMessages-Bridging-Header.h"; sourceTree = "<group>"; };
+		B89424842486AF5800F22052 /* GoogleNearbyMessagesBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GoogleNearbyMessagesBridge.h; sourceTree = "<group>"; };
 		B89424852486AF5900F22052 /* GoogleNearbyMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleNearbyMessages.swift; sourceTree = "<group>"; };
 		B894248A2486B0CC00F22052 /* RCTImageLoader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RCTImageLoader.h; sourceTree = "<group>"; };
 		B894248B2486B0CC00F22052 /* RCTImageStoreManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RCTImageStoreManager.h; sourceTree = "<group>"; };
@@ -392,6 +390,7 @@
 		B894260F2486B0CD00F22052 /* RCTEventDispatcher.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RCTEventDispatcher.m; sourceTree = "<group>"; };
 		B89426102486B0CD00F22052 /* RCTKeyCommands.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RCTKeyCommands.h; sourceTree = "<group>"; };
 		B89426112486B0CD00F22052 /* RCTImageSource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RCTImageSource.h; sourceTree = "<group>"; };
+		B89426122486B5E200F22052 /* GoogleNearbyMessagesBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GoogleNearbyMessagesBridge.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -416,11 +415,10 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
+				B89426122486B5E200F22052 /* GoogleNearbyMessagesBridge.m */,
 				B89424852486AF5900F22052 /* GoogleNearbyMessages.swift */,
-				B89424812486AF1D00F22052 /* GoogleNearbyMessages.h */,
-				B89424822486AF1D00F22052 /* GoogleNearbyMessages.m */,
 				134814211AA4EA7D00B7C361 /* Products */,
-				B89424842486AF5800F22052 /* GoogleNearbyMessages-Bridging-Header.h */,
+				B89424842486AF5800F22052 /* GoogleNearbyMessagesBridge.h */,
 				B89424872486B0CC00F22052 /* Frameworks */,
 			);
 			sourceTree = "<group>";
@@ -1102,7 +1100,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B89424832486AF1D00F22052 /* GoogleNearbyMessages.m in Sources */,
+				B89426132486B5E200F22052 /* GoogleNearbyMessagesBridge.m in Sources */,
 				B89424862486AF5900F22052 /* GoogleNearbyMessages.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1236,7 +1234,7 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = GoogleNearbyMessages;
 				SKIP_INSTALL = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "GoogleNearbyMessages-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = GoogleNearbyMessagesBridge.h;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 			};
@@ -1257,7 +1255,7 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = GoogleNearbyMessages;
 				SKIP_INSTALL = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "GoogleNearbyMessages-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = GoogleNearbyMessagesBridge.h;
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;

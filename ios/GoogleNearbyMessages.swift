@@ -12,8 +12,8 @@ import Foundation
 class NearbyMessages: NSObject {
 	private var count = 0
 	
-	@objc
-	func constantsToExport() -> [AnyHashable : Any]! {
+	@objc(constantsToExport)
+	public func constantsToExport() -> [AnyHashable : Any]! {
 	  return ["initialCount": 0]
 	}
 	

@@ -9,7 +9,7 @@
 #import "GoogleNearbyMessagesBridge.h"
 #import <React/RCTBridgeModule.h>
 
-@interface RCT_EXTERN_REMAP_MODULE(GoogleNearbyMessages, GoogleNearbyMessages, NSObject)
+@interface RCT_EXTERN_REMAP_MODULE(GoogleNearbyMessages, NearbyMessages, NSObject)
 
 RCT_EXTERN_METHOD(increment);
 

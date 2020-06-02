@@ -16,6 +16,7 @@ class NearbyMessages: RCTEventEmitter {
 		case MESSAGE_LOST
 		case BLUETOOTH_ERROR
 		case PERMISSION_ERROR
+		case MESSAGE_NO_DATA_ERROR
 	}
 	enum GoogleNearbyMessagesError: Error, LocalizedError {
 		case permissionError(permissionName: String)
@@ -43,33 +44,23 @@ class NearbyMessages: RCTEventEmitter {
 	
 	@objc(connect:resolver:rejecter:)
 	func connect(_ apiKey: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
-		do {
-			// TODO: remove debug logging
-			GNSMessageManager.setDebugLoggingEnabled(true)
-			
-			let hasPermission = GNSPermission.isGranted()
-			//if (!hasPermission) {
-			//	throw GoogleNearbyMessagesError.permissionError(permissionName: "Bluetooth/Microphone")
-			//}
-			
-			self.messageManager = GNSMessageManager(apiKey: apiKey,
-													paramsBlock: { (params: GNSMessageManagerParams?) in
-														guard let params = params else { return }
-														params.microphonePermissionErrorHandler = { (hasError: Bool) in
-															self.sendEvent(withName: EventType.PERMISSION_ERROR.rawValue, body: [ "permission": "microphone" ]);
-														}
-														params.bluetoothPowerErrorHandler = { (hasError: Bool) in
-															self.sendEvent(withName: EventType.BLUETOOTH_ERROR.rawValue, body: [ "hasError": hasError ]);
-														}
-														params.bluetoothPermissionErrorHandler = { (hasError: Bool) in
-															self.sendEvent(withName: EventType.PERMISSION_ERROR.rawValue, body: [ "message": "bluetooth" ]);
-														}
-														// TODO: Strategy to use BLE only
-			})
-			resolve(nil)
-		} catch {
-			reject("GOOGLE_NEARBY_MESSAGES_ERROR_CONNECT", error.localizedDescription, error)
-		}
+		// TODO: remove debug logging
+		GNSMessageManager.setDebugLoggingEnabled(true)
+		
+		self.messageManager = GNSMessageManager(apiKey: apiKey,
+												paramsBlock: { (params: GNSMessageManagerParams?) in
+													guard let params = params else { return }
+													params.microphonePermissionErrorHandler = { (hasError: Bool) in
+														self.sendEvent(withName: EventType.PERMISSION_ERROR.rawValue, body: [ "error": "microphone" ]);
+													}
+													params.bluetoothPowerErrorHandler = { (hasError: Bool) in
+														self.sendEvent(withName: EventType.BLUETOOTH_ERROR.rawValue, body: [ "error": "hasError: \(hasError)" ]);
+													}
+													params.bluetoothPermissionErrorHandler = { (hasError: Bool) in
+														self.sendEvent(withName: EventType.PERMISSION_ERROR.rawValue, body: [ "error": "bluetooth" ]);
+													}
+		})
+		resolve(nil)
 	}
 	
 	@objc(disconnect:rejecter:)
@@ -115,10 +106,18 @@ class NearbyMessages: RCTEventEmitter {
 			}
 			self.currentSubscription = self.messageManager!.subscription(
 				messageFoundHandler: { (message: GNSMessage?) in
-					self.sendEvent(withName: EventType.MESSAGE_FOUND.rawValue, body: [ "message": message ]);
+					guard let data = message?.content else {
+						self.sendEvent(withName: EventType.MESSAGE_NO_DATA_ERROR.rawValue, body: [ "error" : "Message does not have any Data!" ] )
+						return
+					}
+					self.sendEvent(withName: EventType.MESSAGE_FOUND.rawValue, body: [ "message": String(data: data, encoding: .utf8) ]);
 				},
 				messageLostHandler: { (message: GNSMessage?) in
-					self.sendEvent(withName: EventType.MESSAGE_LOST.rawValue, body: [ "message": message ]);
+					guard let data = message?.content else {
+						self.sendEvent(withName: EventType.MESSAGE_NO_DATA_ERROR.rawValue, body: [ "error" : "Message does not have any Data!" ] )
+						return
+					}
+					self.sendEvent(withName: EventType.MESSAGE_LOST.rawValue, body: [ "message": String(data: data, encoding: .utf8) ]);
 				},
 				paramsBlock: { (params: GNSSubscriptionParams?) in
 				  guard let params = params else { return }

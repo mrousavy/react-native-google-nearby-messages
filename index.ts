@@ -3,9 +3,12 @@ import { NativeModules, NativeEventEmitter } from 'react-native';
 const { GoogleNearbyMessages } = NativeModules;
 const nearbyEventEmitter = new NativeEventEmitter(GoogleNearbyMessages);
 
-export type EventType = 'MESSAGE_FOUND' | 'MESSAGE_LOST' | 'BLUETOOTH_ERROR' | 'PERMISSION_ERROR';
+export type EventType = 'MESSAGE_FOUND' | 'MESSAGE_LOST' | 'BLUETOOTH_ERROR' | 'PERMISSION_ERROR' | 'MESSAGE_NO_DATA_ERROR';
 interface BridgeMessageEvent {
-    message?: string
+    message?: string;
+}
+interface BridgeErrorEvent {
+    error?: string;
 }
 
 /**
@@ -24,7 +27,7 @@ export function disconnect(): Promise<void> {
 }
 
 /**
- * Subscribe to nearby message events. Use onMessageFound and onMessageLost to receive callbacks for found and lost messages.
+ * Subscribe to nearby message events. Use onMessageFound and onMessageLost to receive callbacks for found and lost messages. Always call unsubscribe() to stop publishing.
  */
 export function subscribe(): Promise<() => void> {
     return GoogleNearbyMessages.subscribe();
@@ -38,7 +41,7 @@ export function unsubscribe(): Promise<void> {
 }
 
 /**
- * Publish/Broadcast a new message
+ * Publish/Broadcast a new message. Always call unpublish() to stop publishing.
  * @param message The message to broadcast.
  */
 export function publish(message: string): Promise<void> {
@@ -81,19 +84,31 @@ export function onMessageLost(callback: (message?: string) => void): () => void 
  * Subscribe to any errors
  * @param callback The function to call when an error occurs
  */
-export function onError(callback: (kind: 'BLUETOOTH_ERROR' | 'PERMISSION_ERROR', message?: string) => void): () => void {
-    const bluetoothErrorUnsubscribe = onEvent('BLUETOOTH_ERROR', (m) => callback('BLUETOOTH_ERROR', m));
-    const permissionErrorUnsubscribe = onEvent('PERMISSION_ERROR', (m) => callback('PERMISSION_ERROR', m));
+export function onError(callback: (kind: 'BLUETOOTH_ERROR' | 'PERMISSION_ERROR' | 'MESSAGE_NO_DATA_ERROR', error?: string) => void): () => void {
+    const bluetoothErrorUnsubscribe = onErrorEvent('BLUETOOTH_ERROR', (m) => callback('BLUETOOTH_ERROR', m));
+    const permissionErrorUnsubscribe = onErrorEvent('PERMISSION_ERROR', (m) => callback('PERMISSION_ERROR', m));
+    const messageNoDataErrorUnsubscribe = onErrorEvent('MESSAGE_NO_DATA_ERROR', (m) => callback('MESSAGE_NO_DATA_ERROR', m));
     return () => {
         bluetoothErrorUnsubscribe();
         permissionErrorUnsubscribe();
+        messageNoDataErrorUnsubscribe();
     };
 }
 
 function onEvent(event: EventType, callback: (message?: string) => void): () => void {
+    console.log(`adding ${event}`);
     const subscription = nearbyEventEmitter.addListener(event, (data: BridgeMessageEvent) => callback(data.message));
     return () => {
-        console.log(`removing ${event}`)
+        console.log(`removing ${event}`);
+        subscription.remove();
+    }
+}
+
+function onErrorEvent(event: EventType, callback: (error?: string) => void): () => void {
+    console.log(`adding ${event}`);
+    const subscription = nearbyEventEmitter.addListener(event, (data: BridgeErrorEvent) => callback(data.error));
+    return () => {
+        console.log(`removing ${event}`);
         subscription.remove();
     }
 }

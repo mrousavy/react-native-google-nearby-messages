@@ -10,7 +10,7 @@
 
 import React, {Component} from 'react';
 import {Platform, StyleSheet, Text, View} from 'react-native';
-import GoogleNearbyMessages from 'react-native-google-nearby-messages';
+import {connect, publish, onError} from 'react-native-google-nearby-messages';
 
 export default class App extends Component<{}> {
   state = {
@@ -18,9 +18,15 @@ export default class App extends Component<{}> {
     message: '--',
   };
   componentDidMount() {
-    const nearby = GoogleNearbyMessages();
-    console.log(nearby.connect());
-    console.log(nearby.publish('ay'));
+    this.load();
+  }
+
+  async load() {
+    const unsubscribe = onError((k, m) => {
+      console.error(`${k}: ${m}`);
+    });
+    await connect();
+    await publish('TEST');
   }
 
   render() {

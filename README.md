@@ -27,10 +27,12 @@ unpublish();
 disconnect();
 ```
 
+> Make sure to unpublish, disconnect and remove any listeners as they won't be removed automatically! I don't know if that's possible, if so, please create a Pull Request.
+
 ### Subscribing
 
 ```ts
-import { connect, subscribe, unsubscribe, addOnErrorListener } from 'react-native-google-nearby-messages';
+import { connect, subscribe, addOnErrorListener } from 'react-native-google-nearby-messages';
 
 addOnErrorListener((kind, hasError) => console.error(`${kind}: ${hasError}`));
 const disconnect = await connect('<yourAPIkey>'); // API Key not needed in Android, add to Manifest instead!
@@ -47,6 +49,8 @@ removeListener();
 unsubscribe();
 disconnect();
 ```
+
+> Make sure to unpublish, disconnect and remove any listeners as they won't be removed automatically! I don't know if that's possible, if so, please create a Pull Request.
 
 ### Bluetooth Permissions
 

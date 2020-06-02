@@ -62,20 +62,22 @@ export default class App extends Component {
         },
       ],
     );
+
+    setTimeout(() => {
+      this.componentWillUnmount();
+    }, 5000);
   }
 
   componentWillUnmount() {
     console.log('unpublishing...');
-    unpublish().then(() => {
-      console.log('unsubscribing...');
-      unsubscribe().then(() => {
-        this.listeners.forEach((l) => {
-          console.log(`unsubscribing listener ${l}`);
-          if (l) {
-            l();
-          }
-        });
-      });
+    unpublish();
+    console.log('unsubscribing...');
+    unsubscribe();
+    this.listeners.forEach((l) => {
+      console.log(`unsubscribing listener ${l}`);
+      if (l) {
+        l();
+      }
     });
   }
 

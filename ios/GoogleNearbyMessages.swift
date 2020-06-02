@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CoreBluetooth
 
 @objc(NearbyMessages)
 class NearbyMessages: RCTEventEmitter {
@@ -141,20 +142,18 @@ class NearbyMessages: RCTEventEmitter {
 	
 	@objc(checkBluetoothPermission:rejecter:)
 	func checkBluetoothPermission(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
-		var hasBluetoothPermission = self.hasBluetoothPermission()
+		let hasBluetoothPermission = self.hasBluetoothPermission()
 		resolve(hasBluetoothPermission)
 	}
 	
 	func hasBluetoothPermission() -> Bool {
-		var isBluetoothPermissionGranted: Bool {
-			if #available(iOS 13.1, *) {
-				return CBCentralManager.authorization == .allowedAlways
-			} else if #available(iOS 13.0, *) {
-				return CBCentralManager().authorization == .allowedAlways
-			}
-			// Before iOS 13, Bluetooth permissions are not required
-			return true
+		if #available(iOS 13.1, *) {
+			return CBCentralManager.authorization == .allowedAlways
+		} else if #available(iOS 13.0, *) {
+			return CBCentralManager().authorization == .allowedAlways
 		}
+		// Before iOS 13, Bluetooth permissions are not required
+		return true
 	}
 	
 	override func supportedEvents() -> [String]! {

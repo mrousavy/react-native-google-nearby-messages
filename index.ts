@@ -4,6 +4,9 @@ const { GoogleNearbyMessages } = NativeModules;
 const nearbyEventEmitter = new NativeEventEmitter(GoogleNearbyMessages);
 
 export type EventType = 'MESSAGE_FOUND' | 'MESSAGE_LOST' | 'BLUETOOTH_ERROR' | 'PERMISSION_ERROR';
+interface BridgeMessageEvent {
+    message?: string
+}
 
 /**
  * Initialize and connect the Google Nearby Messages API
@@ -61,7 +64,7 @@ export function checkBluetoothPermission(): Promise<boolean> {
  * @param callback The function to call when a new message has been found
  * @returns A function to unsubscribe (call on unmount)
  */
-export function onMessageFound(callback: (message: string) => void): () => void {
+export function onMessageFound(callback: (message?: string) => void): () => void {
     return onEvent('MESSAGE_FOUND', callback);
 }
 
@@ -70,7 +73,7 @@ export function onMessageFound(callback: (message: string) => void): () => void 
  * @param callback The function to call when an existing message has been lost
  * @returns A function to unsubscribe (call on unmount)
  */
-export function onMessageLost(callback: (message: string) => void): () => void {
+export function onMessageLost(callback: (message?: string) => void): () => void {
     return onEvent('MESSAGE_LOST', callback);
 }
 
@@ -78,7 +81,7 @@ export function onMessageLost(callback: (message: string) => void): () => void {
  * Subscribe to any errors
  * @param callback The function to call when an error occurs
  */
-export function onError(callback: (kind: 'BLUETOOTH_ERROR' | 'PERMISSION_ERROR', message: string) => void): () => void {
+export function onError(callback: (kind: 'BLUETOOTH_ERROR' | 'PERMISSION_ERROR', message?: string) => void): () => void {
     const bluetoothErrorUnsubscribe = onEvent('BLUETOOTH_ERROR', (m) => callback('BLUETOOTH_ERROR', m));
     const permissionErrorUnsubscribe = onEvent('PERMISSION_ERROR', (m) => callback('PERMISSION_ERROR', m));
     return () => {
@@ -87,8 +90,8 @@ export function onError(callback: (kind: 'BLUETOOTH_ERROR' | 'PERMISSION_ERROR',
     };
 }
 
-function onEvent(event: EventType, callback: (message: string) => void): () => void {
-    const subscription = nearbyEventEmitter.addListener(event, callback);
+function onEvent(event: EventType, callback: (message?: string) => void): () => void {
+    const subscription = nearbyEventEmitter.addListener(event, (data: BridgeMessageEvent) => callback(data.message));
     return () => {
         console.log(`removing ${event}`)
         subscription.remove();

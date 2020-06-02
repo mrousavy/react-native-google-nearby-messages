@@ -30,8 +30,8 @@ class NearbyMessages: RCTEventEmitter {
 	  return ["initialCount": 0]
 	}
 	
-	@objc
-	func connect(apiKey: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+	@objc(connect:resolver:rejecter:)
+	func connect(_ apiKey: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
 		do {
 			// TODO: remove debug logging
 			GNSMessageManager.setDebugLoggingEnabled(true)
@@ -61,16 +61,16 @@ class NearbyMessages: RCTEventEmitter {
 		}
 	}
 	
-	@objc
-	func disconnect(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+	@objc(disconnect:rejecter:)
+	func disconnect(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
 		self.currentSubscription = nil
 		self.currentPublication = nil
 		self.messageManager = nil
 		resolve(nil)
 	}
 	
-	@objc
-	func publish(message: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+	@objc(publish:resolver:rejecter:)
+	func publish(_ message: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
 		do {
 			if (self.messageManager == nil) {
 				throw GoogleNearbyMessagesError.runtimeError("Google Nearby Messages is not connected! Call connect() before any other calls.")
@@ -82,14 +82,14 @@ class NearbyMessages: RCTEventEmitter {
 		}
 	}
 	
-	@objc
-	func unpublish(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+	@objc(unpublish:rejecter:)
+	func unpublish(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
 		self.currentPublication = nil
 		resolve(nil)
 	}
 	
-	@objc
-	func subscribe(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+	@objc(subscribe:rejecter:)
+	func subscribe(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
 		do {
 			if (self.messageManager == nil) {
 				throw GoogleNearbyMessagesError.runtimeError("Google Nearby Messages is not connected! Call connect() before any other calls.")
@@ -107,8 +107,8 @@ class NearbyMessages: RCTEventEmitter {
 		}
 	}
 	
-	@objc
-	func unsubscribe(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+	@objc(unsubscribe:rejecter:)
+	func unsubscribe(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
 		self.currentSubscription = nil
 		resolve(nil)
 	}

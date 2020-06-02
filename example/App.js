@@ -17,6 +17,9 @@ import {
   subscribe,
   onMessageFound,
   onMessageLost,
+  checkBluetoothPermission,
+  unsubscribe,
+  unpublish,
 } from 'react-native-google-nearby-messages';
 
 
@@ -50,15 +53,29 @@ export default class App extends Component {
             this.publish();
           },
         },
+        {
+          text: 'Only check Bluetooth Permission',
+          onPress: async () => {
+            const result = await checkBluetoothPermission();
+            Alert.alert('Bluetooth Permissions:', `Granted: ${result}`);
+          },
+        },
       ],
     );
   }
 
   componentWillUnmount() {
-    this.listeners.forEach((l) => {
-      if (l) {
-        l();
-      }
+    console.log('unpublishing...');
+    unpublish().then(() => {
+      console.log('unsubscribing...');
+      unsubscribe().then(() => {
+        this.listeners.forEach((l) => {
+          console.log(`unsubscribing listener ${l}`);
+          if (l) {
+            l();
+          }
+        });
+      });
     });
   }
 
@@ -75,14 +92,14 @@ export default class App extends Component {
     this.listeners.push(
       onMessageFound((m) => {
         this.setState({
-          message: `Found: ${m}`,
+          message: `Found: ${JSON.stringify(m)}`,
         });
       }),
     );
     this.listeners.push(
       onMessageLost((m) => {
         this.setState({
-          message: `Lost: ${m}`,
+          message: `Lost: ${JSON.stringify(m)}`,
         });
       }),
     );

@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "android": "rm -rf node_modules && yarn && react-native run-android",
-    "ios": "rm -rf node_modules && yarn && cd ios && pod install && cd .. && react-native run-ios",
+    "android": "react-native run-android",
+    "ios": "react-native run-ios",
     "start": "react-native start",
     "test": "jest",
     "lint": "eslint ."

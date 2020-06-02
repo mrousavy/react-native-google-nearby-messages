@@ -12,6 +12,34 @@ npm i react-native-google-nearby-messages
 
 ## Usage
 
+### iOS Setup
+
+> See: https://developers.google.com/nearby/messages/ios/get-started
+
+1. Create your Key at [the Google Developer Console](https://console.developers.google.com/flows/enableapi?apiid=copresence&keyType=CLIENT_SIDE_IOS&reusekey=true).
+2. Pass the generated API Key as a parameter using the `connect` function.
+
+### Android Setup
+
+> See: https://developers.google.com/nearby/messages/android/get-started
+
+1. Create your Key at [the Google Developer Console](https://console.developers.google.com/flows/enableapi?apiid=copresence&keyType=CLIENT_SIDE_ANDROID&reusekey=true).
+2. Add your generated API Key to your `AndroidManifest.xml`:
+
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.google.sample.app" >
+    <application ...>
+        <meta-data
+            android:name="com.google.android.nearby.messages.API_KEY"
+            android:value="API_KEY" />
+        <activity>
+        ...
+        </activity>
+    </application>
+</manifest>
+```
+
 ### Publishing
 
 ```ts

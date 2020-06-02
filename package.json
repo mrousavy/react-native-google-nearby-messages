@@ -44,7 +44,7 @@
     "@types/react-native": "^0.62.12",
     "eslint": "^7.1.0",
     "react": "^16.9.0",
-    "react-native": "^0.61.5",
+    "react-native": "^0.62.2",
     "typescript": "^3.9.3"
   }
 }

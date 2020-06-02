@@ -24,13 +24,13 @@ import com.google.android.gms.nearby.messages.MessageListener;
 import com.google.android.gms.nearby.messages.MessagesClient;
 import com.google.android.gms.nearby.messages.MessagesOptions;
 import com.google.android.gms.nearby.messages.NearbyPermissions;
+import com.google.android.gms.nearby.messages.PublishCallback;
 import com.google.android.gms.nearby.messages.PublishOptions;
 import com.google.android.gms.nearby.messages.Strategy;
 import com.google.android.gms.nearby.messages.SubscribeCallback;
 import com.google.android.gms.nearby.messages.SubscribeOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-
 import org.jetbrains.annotations.NotNull;
 
 public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule implements LifecycleEventListener {
@@ -86,8 +86,26 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
             }
         };
         _messagesClient = Nearby.getMessagesClient(getReactApplicationContext(), new MessagesOptions.Builder().setPermissions(NearbyPermissions.BLE).build());
-        _subscribeOptions = new SubscribeOptions.Builder().setStrategy(Strategy.BLE_ONLY).build();
-        _publishOptions = new PublishOptions.Builder().setStrategy(Strategy.BLE_ONLY).build();
+        _subscribeOptions = new SubscribeOptions.Builder()
+                .setStrategy(Strategy.BLE_ONLY)
+                .setCallback(new SubscribeCallback() {
+                    @Override
+                    public void onExpired() {
+                        super.onExpired();
+                        Log.i(getName(), "No longer subscribing");
+                        emitErrorEvent(EventType.BLUETOOTH_ERROR, true);
+                    }
+                }).build();
+        _publishOptions = new PublishOptions.Builder()
+                .setStrategy(Strategy.BLE_ONLY)
+                .setCallback(new PublishCallback(){
+                    @Override
+                    public void onExpired() {
+                        super.onExpired();
+                        Log.i(getName(), "No longer publishing");
+                        emitErrorEvent(EventType.BLUETOOTH_ERROR, true);
+                    }
+                }).build();
         _isSubscribed = false;
         promise.resolve(null);
         Log.d(getName(), "Connected!");
@@ -112,8 +130,8 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
                 _messagesClient.subscribe(_listener, _subscribeOptions).addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
-                        Log.d(getName(), "Subscribed!");
                         Exception e = task.getException();
+                        Log.d(getName(), "Subscribed! With error:" + e.getLocalizedMessage());
                         if (e != null) {
                             _isSubscribed = false;
                             promise.reject(e);
@@ -216,6 +234,7 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
 
     // React Native Event Emitters
     private void emitMessageEvent(@NotNull EventType event, @NotNull String message) {
+        Log.d(getName(), "Emit Message Event! " + event.toString());
         WritableMap params = Arguments.createMap();
         params.putString("message", message);
 
@@ -225,6 +244,7 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
     }
 
     private void emitErrorEvent(@NotNull EventType event, @NotNull boolean hasError) {
+        Log.d(getName(), "Emit Error Event! " + event.toString());
         WritableMap params = Arguments.createMap();
         params.putString("hasError", String.valueOf(hasError));
 

@@ -26,6 +26,7 @@ import com.google.android.gms.nearby.messages.MessagesOptions;
 import com.google.android.gms.nearby.messages.NearbyPermissions;
 import com.google.android.gms.nearby.messages.PublishOptions;
 import com.google.android.gms.nearby.messages.Strategy;
+import com.google.android.gms.nearby.messages.SubscribeCallback;
 import com.google.android.gms.nearby.messages.SubscribeOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -52,13 +53,13 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
         }
     }
 
-    private final MessageListener _listener;
     private MessagesClient _messagesClient;
     @Nullable
     private Message _publishedMessage;
     private boolean _isSubscribed;
-    private final SubscribeOptions _subscribeOptions;
-    private final PublishOptions _publishOptions;
+    private MessageListener _listener;
+    private SubscribeOptions _subscribeOptions;
+    private PublishOptions _publishOptions;
     private final ReactApplicationContext reactContext;
 
     public GoogleNearbyMessagesModule(ReactApplicationContext reactContext) {
@@ -67,23 +68,29 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
 
     }
 
+    // TODO: I'm getting Attempting to perform a high power operation from a non-Activity Context
     @ReactMethod
-    public void connect(final Promise promise, final String apiKey) {
+    public void connect(final String apiKey, final Promise promise) {
+        Log.d(getName(), "Connecting...");
         _listener = new MessageListener() {
             @Override
             public void onFound(Message message) {
+                Log.d(getName(), "Message found!");
                 this.onFound(message);
             }
 
             @Override
             public void onLost(Message message) {
+                Log.d(getName(), "Message lost!");
                 this.onLost(message);
             }
         };
-        _messagesClient = Nearby.getMessagesClient(getApplicationContext(), new MessagesOptions.Builder().setPermissions(NearbyPermissions.BLE).build());
+        _messagesClient = Nearby.getMessagesClient(getReactApplicationContext(), new MessagesOptions.Builder().setPermissions(NearbyPermissions.BLE).build());
         _subscribeOptions = new SubscribeOptions.Builder().setStrategy(Strategy.BLE_ONLY).build();
         _publishOptions = new PublishOptions.Builder().setStrategy(Strategy.BLE_ONLY).build();
         _isSubscribed = false;
+        promise.resolve(null);
+        Log.d(getName(), "Connected!");
     }
 
     @ReactMethod
@@ -97,6 +104,7 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
 
     @ReactMethod
     public void subscribe(final Promise promise) {
+        Log.d(getName(), "Subscribing...");
         if (_messagesClient != null) {
             if (_isSubscribed) {
                 promise.reject(new Exception("An existing callback is already subscribed to the Google Nearby Messages API! Please unsubscribe before subscribing again!"));
@@ -104,6 +112,7 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
                 _messagesClient.subscribe(_listener, _subscribeOptions).addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
+                        Log.d(getName(), "Subscribed!");
                         Exception e = task.getException();
                         if (e != null) {
                             _isSubscribed = false;
@@ -122,10 +131,12 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
 
     @ReactMethod
     public void unsubscribe(final Promise promise) {
+        Log.d(getName(), "Unsubscribing...");
         if (_messagesClient != null) {
             _messagesClient.unsubscribe(_listener).addOnCompleteListener(new OnCompleteListener<Void>() {
                 @Override
                 public void onComplete(@NonNull Task<Void> task) {
+                    Log.d(getName(), "Unsubscribed!");
                     Exception e = task.getException();
                     if (e != null) {
                         promise.reject(e);
@@ -183,7 +194,7 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
 
     @ReactMethod
     public void checkBluetoothPermission(final Promise promise) {
-        if (ContextCompat.checkSelfPermission(this.reactContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(getReactApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             promise.resolve(true);
         } else {
             promise.resolve(false);
@@ -208,7 +219,8 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
         WritableMap params = Arguments.createMap();
         params.putString("message", message);
 
-        reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+        ReactApplicationContext context = getReactApplicationContext();
+        context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
                 .emit(event.toString(), params);
     }
 
@@ -216,7 +228,8 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
         WritableMap params = Arguments.createMap();
         params.putString("hasError", String.valueOf(hasError));
 
-        reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+        ReactApplicationContext context = getReactApplicationContext();
+        context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
                 .emit(event.toString(), params);
     }
 

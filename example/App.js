@@ -70,9 +70,7 @@ export default class App extends Component {
   }
 
   async publish() {
-    if (Platform.OS === 'ios') {
-      this.listeners.push(await connect(API_KEY));
-    }
+    this.listeners.push(await connect(API_KEY));
     this.listeners.push(await publish('TEST'));
     this.setState({
       status: 'Published!',
@@ -80,9 +78,7 @@ export default class App extends Component {
   }
 
   async subscribe() {
-    if (Platform.OS === 'ios') {
-      this.listeners.push(await connect(API_KEY));
-    }
+    this.listeners.push(await connect(API_KEY));
     this.listeners.push(
       await subscribe(
         (m) => {

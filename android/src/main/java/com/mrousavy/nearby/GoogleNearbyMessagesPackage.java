@@ -16,6 +16,11 @@ public class GoogleNearbyMessagesPackage implements ReactPackage {
         return Arrays.<NativeModule>asList(new GoogleNearbyMessagesModule(reactContext));
     }
 
+    public List<Class<? extends JavaScriptModule>> createJSModules() {
+        // deprecated in react native 0.47
+        return null;
+    }
+
     @Override
     public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
         return Collections.emptyList();

@@ -9,24 +9,87 @@
  */
 
 import React, {Component} from 'react';
-import {Platform, StyleSheet, Text, View} from 'react-native';
-import {connect, publish, onError} from 'react-native-google-nearby-messages';
+import {StyleSheet, Text, View, Alert} from 'react-native';
+import {
+  connect,
+  publish,
+  onError,
+  subscribe,
+  onMessageFound,
+  onMessageLost,
+} from 'react-native-google-nearby-messages';
 
-export default class App extends Component<{}> {
+
+export default class App extends Component {
   state = {
     status: 'starting',
     message: '--',
   };
+  listeners = [];
+
   componentDidMount() {
-    this.load();
+    this.listeners.push(
+      onError((k, m) => {
+        console.error(`${k}: ${m}`);
+        Alert.alert('Error!', `${k}: ${m}`);
+      }),
+    );
+    Alert.alert(
+      'who u wanna be',
+      'Do you want to publish a message or subscribe to messages?',
+      [
+        {
+          text: 'Subscriber',
+          onPress: () => {
+            this.subscribe();
+          },
+        },
+        {
+          text: 'Publisher',
+          onPress: () => {
+            this.publish();
+          },
+        },
+      ],
+    );
   }
 
-  async load() {
-    const unsubscribe = onError((k, m) => {
-      console.error(`${k}: ${m}`);
+  componentWillUnmount() {
+    this.listeners.forEach((l) => {
+      if (l) {
+        l();
+      }
     });
-    await connect();
+  }
+
+  async publish() {
+    await connect(API_KEY);
     await publish('TEST');
+    this.setState({
+      status: 'Published!',
+    });
+  }
+
+  async subscribe() {
+    await connect(API_KEY);
+    this.listeners.push(
+      onMessageFound((m) => {
+        this.setState({
+          message: `Found: ${m}`,
+        });
+      }),
+    );
+    this.listeners.push(
+      onMessageLost((m) => {
+        this.setState({
+          message: `Lost: ${m}`,
+        });
+      }),
+    );
+    await subscribe();
+    this.setState({
+      status: 'Subscribed!',
+    });
   }
 
   render() {

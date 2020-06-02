@@ -37,10 +37,12 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>always</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
-	<string>so.</string>
+	<string>peripheral</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string>location when in usage</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>

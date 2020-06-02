@@ -47,9 +47,9 @@ class NearbyMessages: RCTEventEmitter {
 			GNSMessageManager.setDebugLoggingEnabled(true)
 			
 			let hasPermission = GNSPermission.isGranted()
-			if (!hasPermission) {
-				throw GoogleNearbyMessagesError.permissionError(permissionName: "Bluetooth/Microphone")
-			}
+			//if (!hasPermission) {
+			//	throw GoogleNearbyMessagesError.permissionError(permissionName: "Bluetooth/Microphone")
+			//}
 			
 			self.messageManager = GNSMessageManager(apiKey: apiKey,
 													paramsBlock: { (params: GNSMessageManagerParams?) in

@@ -3,6 +3,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <GNSMessages.h>
 
 @interface GoogleNearbyMessagesBridge: NSObject
 @end

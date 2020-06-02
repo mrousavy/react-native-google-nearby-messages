@@ -8,20 +8,20 @@
  * https://github.com/facebook/react-native
  */
 
-import React, { Component } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
-import GoogleNearbyMessages from 'react-native-google-nearby-messages';
+import React, {Component} from 'react';
+import {Platform, StyleSheet, Text, View} from 'react-native';
+import sampleMethod from 'react-native-google-nearby-messages';
 
 export default class App extends Component<{}> {
   state = {
     status: 'starting',
-    message: '--'
+    message: '--',
   };
   componentDidMount() {
-    GoogleNearbyMessages.sampleMethod('Testing', 123, (message) => {
+    sampleMethod('Testing', 123, (message) => {
       this.setState({
         status: 'native callback received',
-        message
+        message,
       });
     });
   }

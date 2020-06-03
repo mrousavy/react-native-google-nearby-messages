@@ -373,7 +373,7 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
             case 2801:
                 return "TOO_MANY_PENDING_INTENTS";
             default:
-                return null;
+                return "UNKNOWN_ERROR";
         }
     }
 }

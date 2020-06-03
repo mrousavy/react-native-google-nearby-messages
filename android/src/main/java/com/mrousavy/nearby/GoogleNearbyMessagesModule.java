@@ -128,7 +128,7 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
         Context context = getContext();
         _messagesClient = Nearby.getMessagesClient(context, new MessagesOptions.Builder().setPermissions(NearbyPermissions.BLE).build());
         _subscribeOptions = new SubscribeOptions.Builder()
-                .setStrategy(new Strategy.Builder().zze(NearbyPermissions.BLE).setTtlSeconds(Strategy.TTL_SECONDS_INFINITE).setDiscoveryMode(Strategy.DISCOVERY_MODE_SCAN).build())
+                .setStrategy(new Strategy.Builder().zze(NearbyPermissions.BLE).setTtlSeconds(Strategy.TTL_SECONDS_INFINITE).build())
                 .setCallback(new SubscribeCallback() {
                     @Override
                     public void onExpired() {
@@ -138,7 +138,7 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
                     }
                 }).build();
         _publishOptions = new PublishOptions.Builder()
-                .setStrategy(new Strategy.Builder().zze(NearbyPermissions.BLE).setTtlSeconds(Strategy.TTL_SECONDS_MAX).setDiscoveryMode(Strategy.DISCOVERY_MODE_BROADCAST).build())
+                .setStrategy(new Strategy.Builder().zze(NearbyPermissions.BLE).setTtlSeconds(Strategy.TTL_SECONDS_MAX).build())
                 .setCallback(new PublishCallback(){
                     @Override
                     public void onExpired() {

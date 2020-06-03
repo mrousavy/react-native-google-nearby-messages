@@ -2,6 +2,7 @@ package com.mrousavy.nearby;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -18,6 +19,8 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.messages.Message;
 import com.google.android.gms.nearby.messages.MessageListener;
@@ -39,7 +42,8 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
         MESSAGE_LOST("MESSAGE_LOST"),
         BLUETOOTH_ERROR("BLUETOOTH_ERROR"),
         PERMISSION_ERROR("PERMISSION_ERROR"),
-        MESSAGE_NO_DATA_ERROR("MESSAGE_NO_DATA_ERROR");
+        MESSAGE_NO_DATA_ERROR("MESSAGE_NO_DATA_ERROR"),
+        UNSUPPORTED_ERROR("UNSUPPORTED_ERROR");
 
         private final String _type;
 
@@ -52,6 +56,8 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
             return _type;
         }
     }
+
+    private static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
 
     private MessagesClient _messagesClient;
     @Nullable
@@ -68,10 +74,35 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
 
     }
 
+    private boolean isMinimumAndroidVersion() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH;
+    }
+
+    private boolean isGooglePlayServicesAvailable(boolean showErrorDialog) {
+        GoogleApiAvailability googleApi = GoogleApiAvailability.getInstance();
+        int availability = googleApi.isGooglePlayServicesAvailable(getReactApplicationContext());
+        boolean result = availability == ConnectionResult.SUCCESS;
+        if(!result &&
+           showErrorDialog &&
+           googleApi.isUserResolvableError(availability)
+        ) {
+            googleApi.getErrorDialog(getCurrentActivity(), availability, PLAY_SERVICES_RESOLUTION_REQUEST).show();
+        }
+        return result;
+    }
+
     // TODO: I'm getting Attempting to perform a high power operation from a non-Activity Context
     @ReactMethod
     public void connect(final String apiKey, final Promise promise) {
         Log.d(getName(), "Connecting...");
+        if(!isMinimumAndroidVersion()) {
+            emitErrorEvent(EventType.UNSUPPORTED_ERROR, true, "Current Android version is too low: " + Integer.toString(Build.VERSION.SDK_INT));
+            return;
+        }
+        if(!isGooglePlayServicesAvailable(true)) {
+            emitErrorEvent(EventType.UNSUPPORTED_ERROR, true, "Google Play Services is not available on this device.");
+            return;
+        }
         _listener = new MessageListener() {
             @Override
             public void onFound(Message message) {
@@ -93,7 +124,7 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
                     public void onExpired() {
                         super.onExpired();
                         Log.i(getName(), "No longer subscribing");
-                        emitErrorEvent(EventType.BLUETOOTH_ERROR, true);
+                        emitErrorEvent(EventType.BLUETOOTH_ERROR, true, "Subscribe expired!");
                     }
                 }).build();
         _publishOptions = new PublishOptions.Builder()
@@ -103,7 +134,7 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
                     public void onExpired() {
                         super.onExpired();
                         Log.i(getName(), "No longer publishing");
-                        emitErrorEvent(EventType.BLUETOOTH_ERROR, true);
+                        emitErrorEvent(EventType.BLUETOOTH_ERROR, true, "Publish expired!");
                     }
                 }).build();
         _isSubscribed = false;
@@ -243,10 +274,13 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
                 .emit(event.toString(), params);
     }
 
-    private void emitErrorEvent(@NotNull EventType event, @NotNull boolean hasError) {
+    private void emitErrorEvent(@NotNull EventType event, @NotNull boolean hasError, @Nullable String message) {
         Log.d(getName(), "Emit Error Event! " + event.toString());
         WritableMap params = Arguments.createMap();
         params.putString("hasError", String.valueOf(hasError));
+        if (message != null) {
+            params.putString("message", message);
+        }
 
         ReactApplicationContext context = getReactApplicationContext();
         context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)

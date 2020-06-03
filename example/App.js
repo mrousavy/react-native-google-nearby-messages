@@ -9,7 +9,7 @@
  */
 
 import React, {Component} from 'react';
-import {StyleSheet, Text, View, Alert, Platform} from 'react-native';
+import {StyleSheet, Text, View, Alert} from 'react-native';
 import {
   connect,
   publish,

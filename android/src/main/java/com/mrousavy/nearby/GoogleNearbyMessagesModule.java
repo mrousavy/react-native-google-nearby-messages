@@ -1,6 +1,7 @@
 package com.mrousavy.nearby;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.util.Log;
@@ -21,6 +22,8 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.api.Api;
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.messages.Message;
 import com.google.android.gms.nearby.messages.MessageListener;
@@ -71,16 +74,20 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
     public GoogleNearbyMessagesModule(ReactApplicationContext reactContext) {
         super(reactContext);
         this.reactContext = reactContext;
-
+        this.reactContext.addLifecycleEventListener(this);
     }
 
     private boolean isMinimumAndroidVersion() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH;
     }
 
+    private Context getContext() {
+        return getCurrentActivity();
+    }
+
     private boolean isGooglePlayServicesAvailable(boolean showErrorDialog) {
         GoogleApiAvailability googleApi = GoogleApiAvailability.getInstance();
-        int availability = googleApi.isGooglePlayServicesAvailable(getReactApplicationContext());
+        int availability = googleApi.isGooglePlayServicesAvailable(getContext());
         boolean result = availability == ConnectionResult.SUCCESS;
         if(!result &&
            showErrorDialog &&
@@ -116,7 +123,8 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
                 this.onLost(message);
             }
         };
-        _messagesClient = Nearby.getMessagesClient(getReactApplicationContext(), new MessagesOptions.Builder().setPermissions(NearbyPermissions.BLE).build());
+        Context context = getContext();
+        _messagesClient = Nearby.getMessagesClient(context, new MessagesOptions.Builder().setPermissions(NearbyPermissions.BLE).build());
         _subscribeOptions = new SubscribeOptions.Builder()
                 .setStrategy(Strategy.BLE_ONLY)
                 .setCallback(new SubscribeCallback() {
@@ -162,10 +170,17 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         Exception e = task.getException();
-                        Log.d(getName(), "Subscribed! With error:" + e.getLocalizedMessage());
+                        boolean success = task.isSuccessful();
+                        Log.d(getName(), "Subscribed! Successful: " + success);
                         if (e != null) {
+                            Log.e(getName(), "Error: " + e.getMessage());
                             _isSubscribed = false;
-                            promise.reject(e);
+                            ApiException apiException = (e instanceof ApiException ? (ApiException) e : null);
+                            if (apiException != null && apiException.getStatusCode() == 2822) {
+                                promise.reject(new Exception(apiException.getStatusCode() + ": API Key not found in AndroidManifest.xml!"));
+                            } else {
+                                promise.reject(e);
+                            }
                         } else {
                             _isSubscribed = true;
                             promise.resolve(null);
@@ -211,8 +226,12 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         Exception e = task.getException();
-                        if (e != null) promise.reject(e);
-                        else promise.resolve(null);
+                        if (e != null) {
+                            _publishedMessage = null;
+                            promise.reject(e);
+                        } else {
+                            promise.resolve(null);
+                        }
                     }
                 });
             }
@@ -243,7 +262,7 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
 
     @ReactMethod
     public void checkBluetoothPermission(final Promise promise) {
-        if (ContextCompat.checkSelfPermission(getReactApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             promise.resolve(true);
         } else {
             promise.resolve(false);

@@ -44,27 +44,28 @@ class NearbyMessages: RCTEventEmitter {
 	
 	@objc(connect:resolver:rejecter:)
 	func connect(_ apiKey: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
-		// TODO: remove debug logging
 		//GNSMessageManager.setDebugLoggingEnabled(true)
 		
 		self.messageManager = GNSMessageManager(apiKey: apiKey,
 												paramsBlock: { (params: GNSMessageManagerParams?) in
 													guard let params = params else { return }
 													params.microphonePermissionErrorHandler = { (hasError: Bool) in
-														self.sendEvent(withName: EventType.PERMISSION_ERROR.rawValue, body: [ "hasError": hasError ]);
+														self.sendEvent(withName: EventType.PERMISSION_ERROR.rawValue, body: [ "hasError": hasError, "message": "Microphone Permission denied!" ]);
 													}
 													params.bluetoothPowerErrorHandler = { (hasError: Bool) in
-														self.sendEvent(withName: EventType.BLUETOOTH_ERROR.rawValue, body: [ "hasError": hasError ]);
+														self.sendEvent(withName: EventType.BLUETOOTH_ERROR.rawValue, body: [ "hasError": hasError, "message": "Bluetooth is powered off/unavailable!" ]);
 													}
 													params.bluetoothPermissionErrorHandler = { (hasError: Bool) in
-														self.sendEvent(withName: EventType.PERMISSION_ERROR.rawValue, body: [ "hasError": hasError ]);
+														self.sendEvent(withName: EventType.PERMISSION_ERROR.rawValue, body: [ "hasError": hasError, "message": "Bluetooth Permission denied!" ]);
 													}
+													
 		})
 		resolve(nil)
 	}
 	
 	@objc
 	func disconnect() -> Void {
+		// TODO: is setting nil enough garbage collection? no need for CFRetain, CFRelease, or CFAutorelease?
 		self.currentSubscription = nil
 		self.currentPublication = nil
 		self.messageManager = nil
@@ -78,13 +79,14 @@ class NearbyMessages: RCTEventEmitter {
 			}
 			self.currentPublication = self.messageManager!.publication(with: GNSMessage(content: message.data(using: .utf8)),
 				paramsBlock: { (params: GNSPublicationParams?) in
-				  guard let params = params else { return }
-				  params.strategy = GNSStrategy(paramsBlock: { (params: GNSStrategyParams?) in
 					guard let params = params else { return }
-					params.discoveryMediums = .BLE
-					//params.discoveryMode = .broadcast
-				  })
-				})
+					params.strategy = GNSStrategy(paramsBlock: { (params: GNSStrategyParams?) in
+						guard let params = params else { return }
+						params.discoveryMediums = .BLE
+						//params.discoveryMode = .broadcast
+						
+					})
+			})
 			resolve(nil)
 		} catch {
 			reject("GOOGLE_NEARBY_MESSAGES_ERROR_PUBLISH", error.localizedDescription, error)
@@ -105,14 +107,14 @@ class NearbyMessages: RCTEventEmitter {
 			self.currentSubscription = self.messageManager!.subscription(
 				messageFoundHandler: { (message: GNSMessage?) in
 					guard let data = message?.content else {
-						self.sendEvent(withName: EventType.MESSAGE_NO_DATA_ERROR.rawValue, body: [ "error" : "Message does not have any Data!" ] )
+						self.sendEvent(withName: EventType.MESSAGE_NO_DATA_ERROR.rawValue, body: [ "hasError": true, "message": "Message does not have any Data!" ] )
 						return
 					}
 					self.sendEvent(withName: EventType.MESSAGE_FOUND.rawValue, body: [ "message": String(data: data, encoding: .utf8) ]);
 				},
 				messageLostHandler: { (message: GNSMessage?) in
 					guard let data = message?.content else {
-						self.sendEvent(withName: EventType.MESSAGE_NO_DATA_ERROR.rawValue, body: [ "error" : "Message does not have any Data!" ] )
+						self.sendEvent(withName: EventType.MESSAGE_NO_DATA_ERROR.rawValue, body: [ "hasError": true, "message": "Message does not have any Data!" ] )
 						return
 					}
 					self.sendEvent(withName: EventType.MESSAGE_LOST.rawValue, body: [ "message": String(data: data, encoding: .utf8) ]);

@@ -18,6 +18,7 @@ import {
   addOnErrorListener,
 } from 'react-native-google-nearby-messages';
 
+const API_KEY = '<yourapikey>';
 
 export default class App extends Component {
   state = {

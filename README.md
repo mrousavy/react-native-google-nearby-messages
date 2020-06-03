@@ -12,13 +12,15 @@ npm i react-native-google-nearby-messages
 
 ## Usage
 
+See the [example app](example/).
+
 ### iOS Setup
 
 > See: https://developers.google.com/nearby/messages/ios/get-started
 
 1. Create your Key at [the Google Developer Console](https://console.developers.google.com/flows/enableapi?apiid=copresence&keyType=CLIENT_SIDE_IOS&reusekey=true).
 2. Pass the generated API Key as a parameter using the `connect` function.
-3. Add bluetooth permission to `Info.plist`
+3. Add bluetooth permissions (`NSBluetoothPeripheralUsageDescription`, `NSBluetoothAlwaysUsageDescription`) to `Info.plist`
 
 ### Android Setup
 
@@ -41,7 +43,7 @@ npm i react-native-google-nearby-messages
     </manifest>
     ```
 
-3. Add bluetooth and bluetooth_admin permissions to `AndroidManifest.xml`
+3. Add `android.permission.BLUETOOTH` and `android.permission.BLUETOOTH_ADMIN` permissions to `AndroidManifest.xml`. (Maybe also `ACCESS_FINE_LOCATION` and `ACCESS_COARSE_LOCATION`)
 
 ### Publishing
 
@@ -97,5 +99,5 @@ If you're having any trouble getting the Nearby API working, please make sure yo
 
 1. The library only supports BLE (bluetooth low energy). You can change it in the `GoogleNearbyMessagesModule.java` and `GoogleNearbyMessages.swift` files yourself, or create a pull-request with a customizable constructor.
 2. The JS error codes (promise rejectors) should tell you enough information on what went wrong, check [this doc page](https://developers.google.com/android/reference/com/google/android/gms/nearby/messages/NearbyMessagesStatusCodes) on more information about each individual error code.
-3. Make sure your device has BLE capabilities and the App has Permission to use those. Include the required Permissions in `Info.plist` and `AndroidManifest.xml`.
+3. Make sure your device has BLE capabilities and the App has Permission to use those. Include the required Permissions in `Info.plist` and `AndroidManifest.xml`. Also try adding the `INTERNET`, `ACCESS_FINE_LOCATION` and `ACCESS_COARSE_LOCATION` permissions if nothing else works.
 4. Make sure your API Key is valid!

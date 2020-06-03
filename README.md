@@ -2,6 +2,8 @@
 
 An async **Google Nearby Messages** API Wrapper for **React Native** (Android & iOS), using the newest API Version (`17`). Also, this is a good example on how to use _Swift_ in a React Native Native Module.
 
+[![react-native-google-nearby-messages](https://badge.fury.io/js/react-native-google-nearby-messages.svg)](https://badge.fury.io/js/react-native-google-nearby-messages)
+
 ## Install
 
 ```sh

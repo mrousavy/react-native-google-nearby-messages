@@ -8,6 +8,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.facebook.react.bridge.Arguments;
@@ -126,7 +127,7 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
         Context context = getContext();
         _messagesClient = Nearby.getMessagesClient(context, new MessagesOptions.Builder().setPermissions(NearbyPermissions.BLE).build());
         _subscribeOptions = new SubscribeOptions.Builder()
-                .setStrategy(Strategy.BLE_ONLY)
+                .setStrategy(new Strategy.Builder().zze(2).setTtlSeconds(Strategy.TTL_SECONDS_INFINITE).setDiscoveryMode(Strategy.DISCOVERY_MODE_SCAN).build())
                 .setCallback(new SubscribeCallback() {
                     @Override
                     public void onExpired() {
@@ -136,7 +137,7 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
                     }
                 }).build();
         _publishOptions = new PublishOptions.Builder()
-                .setStrategy(Strategy.BLE_ONLY)
+                .setStrategy(new Strategy.Builder().zze(2).setTtlSeconds(Strategy.TTL_SECONDS_MAX).setDiscoveryMode(Strategy.DISCOVERY_MODE_BROADCAST).build())
                 .setCallback(new PublishCallback(){
                     @Override
                     public void onExpired() {
@@ -173,7 +174,7 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
                         boolean success = task.isSuccessful();
                         Log.d(getName(), "Subscribed! Successful: " + success);
                         if (e != null) {
-                            Log.e(getName(), "Error: " + e.getMessage());
+                            Log.e(getName(), "Subscribe Error: " + e.getMessage());
                             _isSubscribed = false;
                             ApiException apiException = (e instanceof ApiException ? (ApiException) e : null);
                             if (apiException != null && apiException.getStatusCode() == 2822) {
@@ -227,8 +228,14 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
                     public void onComplete(@NonNull Task<Void> task) {
                         Exception e = task.getException();
                         if (e != null) {
+                            Log.e(getName(), "Publish Error: " + e.getMessage());
                             _publishedMessage = null;
-                            promise.reject(e);
+                            ApiException apiException = (e instanceof ApiException ? (ApiException) e : null);
+                            if (apiException != null && apiException.getStatusCode() == 2822) {
+                                promise.reject(new Exception(apiException.getStatusCode() + ": API Key not found in AndroidManifest.xml!"));
+                            } else {
+                                promise.reject(e);
+                            }
                         } else {
                             promise.resolve(null);
                         }

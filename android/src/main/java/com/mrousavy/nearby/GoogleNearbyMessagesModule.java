@@ -25,6 +25,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.Api;
 import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.messages.Message;
 import com.google.android.gms.nearby.messages.MessageListener;
@@ -127,7 +128,7 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
         Context context = getContext();
         _messagesClient = Nearby.getMessagesClient(context, new MessagesOptions.Builder().setPermissions(NearbyPermissions.BLE).build());
         _subscribeOptions = new SubscribeOptions.Builder()
-                .setStrategy(new Strategy.Builder().zze(2).setTtlSeconds(Strategy.TTL_SECONDS_INFINITE).setDiscoveryMode(Strategy.DISCOVERY_MODE_SCAN).build())
+                .setStrategy(new Strategy.Builder().zze(NearbyPermissions.BLE).setTtlSeconds(Strategy.TTL_SECONDS_INFINITE).setDiscoveryMode(Strategy.DISCOVERY_MODE_SCAN).build())
                 .setCallback(new SubscribeCallback() {
                     @Override
                     public void onExpired() {
@@ -137,7 +138,7 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
                     }
                 }).build();
         _publishOptions = new PublishOptions.Builder()
-                .setStrategy(new Strategy.Builder().zze(2).setTtlSeconds(Strategy.TTL_SECONDS_MAX).setDiscoveryMode(Strategy.DISCOVERY_MODE_BROADCAST).build())
+                .setStrategy(new Strategy.Builder().zze(NearbyPermissions.BLE).setTtlSeconds(Strategy.TTL_SECONDS_MAX).setDiscoveryMode(Strategy.DISCOVERY_MODE_BROADCAST).build())
                 .setCallback(new PublishCallback(){
                     @Override
                     public void onExpired() {
@@ -174,14 +175,8 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
                         boolean success = task.isSuccessful();
                         Log.d(getName(), "Subscribed! Successful: " + success);
                         if (e != null) {
-                            Log.e(getName(), "Subscribe Error: " + e.getMessage());
                             _isSubscribed = false;
-                            ApiException apiException = (e instanceof ApiException ? (ApiException) e : null);
-                            if (apiException != null && apiException.getStatusCode() == 2822) {
-                                promise.reject(new Exception(apiException.getStatusCode() + ": API Key not found in AndroidManifest.xml!"));
-                            } else {
-                                promise.reject(e);
-                            }
+                            promise.reject(mapApiException(e));
                         } else {
                             _isSubscribed = true;
                             promise.resolve(null);
@@ -204,7 +199,7 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
                     Log.d(getName(), "Unsubscribed!");
                     Exception e = task.getException();
                     if (e != null) {
-                        promise.reject(e);
+                        promise.reject(mapApiException(e));
                     } else {
                         _isSubscribed = false;
                         promise.resolve(null);
@@ -228,14 +223,8 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
                     public void onComplete(@NonNull Task<Void> task) {
                         Exception e = task.getException();
                         if (e != null) {
-                            Log.e(getName(), "Publish Error: " + e.getMessage());
                             _publishedMessage = null;
-                            ApiException apiException = (e instanceof ApiException ? (ApiException) e : null);
-                            if (apiException != null && apiException.getStatusCode() == 2822) {
-                                promise.reject(new Exception(apiException.getStatusCode() + ": API Key not found in AndroidManifest.xml!"));
-                            } else {
-                                promise.reject(e);
-                            }
+                            promise.reject(mapApiException(e));
                         } else {
                             promise.resolve(null);
                         }
@@ -255,8 +244,12 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         Exception e = task.getException();
-                        if (e != null) promise.reject(e);
-                        else promise.resolve(null);
+                        if (e != null) {
+                            promise.reject(mapApiException(e));
+                        } else{
+                            promise.resolve(null);
+                            _publishedMessage = null;
+                        }
                     }
                 });
             } else {
@@ -340,5 +333,47 @@ public class GoogleNearbyMessagesModule extends ReactContextBaseJavaModule imple
     @Override
     public String getName() {
         return "GoogleNearbyMessages";
+    }
+
+    private Exception mapApiException(Exception e) {
+        ApiException apiException = (e instanceof ApiException ? (ApiException) e : null);
+        if (apiException != null) {
+            String descriptor = errorCodeToDescriptor(apiException.getStatusCode());
+            return new Exception(apiException.getStatusCode() + ": " + descriptor + ". See: https://developers.google.com/android/reference/com/google/android/gms/nearby/messages/NearbyMessagesStatusCodes");
+        } else {
+            return e;
+        }
+    }
+
+    /**
+     * Map API error code to descriptor - See: https://developers.google.com/android/reference/com/google/android/gms/nearby/messages/NearbyMessagesStatusCodes
+     * @param errorCode The code to map.
+     * @return A descriptor for the error code. Or null.
+     */
+    private String errorCodeToDescriptor(int errorCode) {
+        switch(errorCode) {
+            case 2802:
+                return "APP_NOT_OPTED_IN";
+            case 2804:
+                return "APP_QUOTA_LIMIT_REACHED";
+            case 2821:
+                return "BLE_ADVERTISING_UNSUPPORTED";
+            case 2822:
+                return "BLE_SCANNING_UNSUPPORTED";
+            case 2820:
+                return "BLUETOOTH_OFF";
+            case 2803:
+                return "DISALLOWED_CALLING_CONTEXT";
+            case 2806:
+                return "FORBIDDEN";
+            case 2807:
+                return "MISSING_PERMISSIONS";
+            case 2805:
+                return "NOT_AUTHORIZED";
+            case 2801:
+                return "TOO_MANY_PENDING_INTENTS";
+            default:
+                return null;
+        }
     }
 }

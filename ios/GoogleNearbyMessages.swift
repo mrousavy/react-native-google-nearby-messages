@@ -17,6 +17,7 @@ class NearbyMessages: RCTEventEmitter {
 		case BLUETOOTH_ERROR
 		case PERMISSION_ERROR
 		case MESSAGE_NO_DATA_ERROR
+		case UNSUPPORTED_ERROR
 	}
 	enum GoogleNearbyMessagesError: Error, LocalizedError {
 		case permissionError(permissionName: String)

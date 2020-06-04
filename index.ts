@@ -87,7 +87,9 @@ export function unpublish(): void {
 }
 
 /**
- * Checks if the User has given Bluetooth Permission. If not yet asked, a "grant permission?" dialog will pop up.
+ * **On iOS**, this function checks if the User has given Bluetooth Permission. If not yet asked, a "grant permission?" dialog will pop up.
+ *
+ * **On Android**, this function checks if a `BluetoothAdapter` can be found, and if the Google Play Services are available (required for Google Nearby API)
  */
 export function checkBluetoothPermission(): Promise<boolean> {
     return GoogleNearbyMessages.checkBluetoothPermission();

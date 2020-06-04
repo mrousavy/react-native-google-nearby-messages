@@ -199,6 +199,11 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
 
     @ReactMethod
     fun checkBluetoothPermission(promise: Promise) {
+        promise.resolve(true);
+    }
+
+    @ReactMethod
+    fun checkBluetoothAvailability(promise: Promise) {
         val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
         if (bluetoothAdapter == null) {
             promise.resolve(false)

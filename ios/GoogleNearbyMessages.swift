@@ -22,7 +22,7 @@ class NearbyMessages: RCTEventEmitter {
 	enum GoogleNearbyMessagesError: Error, LocalizedError {
 		case permissionError(permissionName: String)
 		case runtimeError(message: String)
-		
+
 		public var errorDescription: String? {
 			switch self {
 			case .permissionError(permissionName: let permissionName):
@@ -33,20 +33,16 @@ class NearbyMessages: RCTEventEmitter {
 		}
 	}
 
-	
+
 	private var messageManager: GNSMessageManager? = nil
 	private var currentPublication: GNSPublication? = nil
 	private var currentSubscription: GNSSubscription? = nil
-	
-	@objc(constantsToExport)
-	override public func constantsToExport() -> [AnyHashable : Any]! {
-	  return ["initialCount": 0]
-	}
-	
+
 	@objc(connect:resolver:rejecter:)
 	func connect(_ apiKey: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
+		print("GNM_BLE: Connecting...")
 		//GNSMessageManager.setDebugLoggingEnabled(true)
-		
+
 		self.messageManager = GNSMessageManager(apiKey: apiKey,
 												paramsBlock: { (params: GNSMessageManagerParams?) in
 													guard let params = params else { return }
@@ -59,21 +55,23 @@ class NearbyMessages: RCTEventEmitter {
 													params.bluetoothPermissionErrorHandler = { (hasError: Bool) in
 														self.sendEvent(withName: EventType.PERMISSION_ERROR.rawValue, body: [ "hasError": hasError, "message": "Bluetooth Permission denied!" ]);
 													}
-													
+
 		})
 		resolve(nil)
 	}
-	
+
 	@objc
 	func disconnect() -> Void {
+		print("GNM_BLE: Disconnecting...")
 		// TODO: is setting nil enough garbage collection? no need for CFRetain, CFRelease, or CFAutorelease?
 		self.currentSubscription = nil
 		self.currentPublication = nil
 		self.messageManager = nil
 	}
-	
+
 	@objc(publish:resolver:rejecter:)
 	func publish(_ message: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
+		print("GNM_BLE: Publishing...")
 		do {
 			if (self.messageManager == nil) {
 				throw GoogleNearbyMessagesError.runtimeError(message: "Google Nearby Messages is not connected! Call connect() before any other calls.")
@@ -85,7 +83,7 @@ class NearbyMessages: RCTEventEmitter {
 						guard let params = params else { return }
 						params.discoveryMediums = .BLE
 						//params.discoveryMode = .broadcast
-						
+
 					})
 			})
 			resolve(nil)
@@ -93,14 +91,16 @@ class NearbyMessages: RCTEventEmitter {
 			reject("GOOGLE_NEARBY_MESSAGES_ERROR_PUBLISH", error.localizedDescription, error)
 		}
 	}
-	
+
 	@objc
 	func unpublish() -> Void {
+		print("GNM_BLE: Unpublishing...")
 		self.currentPublication = nil
 	}
-	
+
 	@objc(subscribe:rejecter:)
 	func subscribe(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
+		print("GNM_BLE: Subscribing...")
 		do {
 			if (self.messageManager == nil) {
 				throw GoogleNearbyMessagesError.runtimeError(message: "Google Nearby Messages is not connected! Call connect() before any other calls.")
@@ -111,6 +111,7 @@ class NearbyMessages: RCTEventEmitter {
 						self.sendEvent(withName: EventType.MESSAGE_NO_DATA_ERROR.rawValue, body: [ "hasError": true, "message": "Message does not have any Data!" ] )
 						return
 					}
+					print("GNM_BLE: Found message!")
 					self.sendEvent(withName: EventType.MESSAGE_FOUND.rawValue, body: [ "message": String(data: data, encoding: .utf8) ]);
 				},
 				messageLostHandler: { (message: GNSMessage?) in
@@ -118,6 +119,7 @@ class NearbyMessages: RCTEventEmitter {
 						self.sendEvent(withName: EventType.MESSAGE_NO_DATA_ERROR.rawValue, body: [ "hasError": true, "message": "Message does not have any Data!" ] )
 						return
 					}
+					print("GNM_BLE: Lost message!")
 					self.sendEvent(withName: EventType.MESSAGE_LOST.rawValue, body: [ "message": String(data: data, encoding: .utf8) ]);
 				},
 				paramsBlock: { (params: GNSSubscriptionParams?) in
@@ -133,18 +135,26 @@ class NearbyMessages: RCTEventEmitter {
 			reject("GOOGLE_NEARBY_MESSAGES_ERROR_SUBSCRIBE", error.localizedDescription, error)
 		}
 	}
-	
+
 	@objc
 	func unsubscribe() -> Void {
+		print("GNM_BLE: Unsubscribing...")
 		self.currentSubscription = nil
 	}
-	
+
 	@objc(checkBluetoothPermission:rejecter:)
 	func checkBluetoothPermission(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
+		print("GNM_BLE: Checking Bluetooth Permissions...")
 		let hasBluetoothPermission = self.hasBluetoothPermission()
 		resolve(hasBluetoothPermission)
 	}
-	
+
+	@objc(checkBluetoothAvailability:rejecter:)
+	func checkBluetoothAvailability(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
+		// TODO: Check if this device supports bluetooth. e.g.: On a Simulator it should resolve to no.
+		resolve(true)
+	}
+
 	func hasBluetoothPermission() -> Bool {
 		if #available(iOS 13.1, *) {
 			return CBCentralManager.authorization == .allowedAlways
@@ -154,22 +164,23 @@ class NearbyMessages: RCTEventEmitter {
 		// Before iOS 13, Bluetooth permissions are not required
 		return true
 	}
-	
+
 	override func supportedEvents() -> [String]! {
 		return EventType.allCases.map { (event: EventType) -> String in
 			return event.rawValue
 		}
 	}
-	
+
 	@objc
 	override static func requiresMainQueueSetup() -> Bool {
 		// init on background thread
 		return false
 	}
-	
+
+	// Called when the UIView gets destroyed (e.g. App reload)
 	@objc
 	func invalidate() {
-		// TODO: disconnect bluetooth here?
-		print("GNM_BLE: invalidate!!")
+		disconnect()
+		print("GNM_BLE: invalidate")
 	}
 }

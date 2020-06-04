@@ -19,12 +19,6 @@ RCT_EXTERN_METHOD(unpublish);
 RCT_EXTERN_METHOD(subscribe:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject);
 RCT_EXTERN_METHOD(unsubscribe);
 RCT_EXTERN_METHOD(checkBluetoothPermission:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject);
-
-- (void)invalidate
-{
-	// TODO: disconnect bluetooth here?
-	printf("GNM_BLE: invalidate!");
-}
-
+RCT_EXTERN_METHOD(checkBluetoothAvailability:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject);
 
 @end

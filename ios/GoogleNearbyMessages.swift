@@ -166,4 +166,10 @@ class NearbyMessages: RCTEventEmitter {
 		// init on background thread
 		return false
 	}
+	
+	@objc
+	func invalidate() {
+		// TODO: disconnect bluetooth here?
+		print("GNM_BLE: invalidate!!")
+	}
 }

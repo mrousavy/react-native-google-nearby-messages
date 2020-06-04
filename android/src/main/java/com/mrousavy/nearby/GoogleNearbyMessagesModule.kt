@@ -28,7 +28,6 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
         override fun toString(): String {
             return _type
         }
-
     }
 
     private var _messagesClient: MessagesClient? = null
@@ -42,48 +41,50 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
     private val context: Context?
         get() = currentActivity
 
-    private fun isGooglePlayServicesAvailable(showErrorDialog: Boolean): Boolean {
-        val googleApi = GoogleApiAvailability.getInstance()
-        val availability = googleApi.isGooglePlayServicesAvailable(context)
-        val result = availability == ConnectionResult.SUCCESS
-        if (!result &&
-                showErrorDialog &&
-                googleApi.isUserResolvableError(availability)) {
-            googleApi.getErrorDialog(currentActivity, availability, PLAY_SERVICES_RESOLUTION_REQUEST).show()
-        }
-        return result
-    }
 
     @ReactMethod
     fun connect(apiKey: String?, promise: Promise) {
-        Log.d(name, "Connecting...")
+        Log.d(name, "GNM_BLE: Connecting...")
         if (!isMinimumAndroidVersion) {
-            emitErrorEvent(EventType.UNSUPPORTED_ERROR, true, "Current Android version is too low: " + Integer.toString(Build.VERSION.SDK_INT))
+            promise.reject(Exception("UNSUPPORTED_ERROR: Current Android version is too low: ${Build.VERSION.SDK_INT}"))
+            emitErrorEvent(EventType.UNSUPPORTED_ERROR, true, "Current Android version is too low: ${Build.VERSION.SDK_INT}")
             return
         }
         if (!isGooglePlayServicesAvailable(true)) {
-            emitErrorEvent(EventType.UNSUPPORTED_ERROR, true, "Google Play Services is not available on this device.")
+            promise.reject(Exception("UNSUPPORTED_ERROR: Google Play Services are not available on this device."))
+            emitErrorEvent(EventType.UNSUPPORTED_ERROR, true, "Google Play Services are not available on this device.")
+            return
+        }
+        if (BluetoothAdapter.getDefaultAdapter() == null) {
+            promise.reject(Exception("UNSUPPORTED_ERROR: No default Bluetooth adapter could be found."))
+            emitErrorEvent(EventType.UNSUPPORTED_ERROR, true, "No default Bluetooth adapter could be found.")
             return
         }
         _listener = object : MessageListener() {
             override fun onFound(message: Message) {
-                Log.d(name, "Message found!")
                 this.onFound(message)
             }
 
             override fun onLost(message: Message) {
-                Log.d(name, "Message lost!")
                 this.onLost(message)
             }
         }
         val context = context
         _messagesClient = Nearby.getMessagesClient(context!!, MessagesOptions.Builder().setPermissions(NearbyPermissions.BLE).build())
+        _messagesClient!!.registerStatusCallback(object : StatusCallback() {
+            override fun onPermissionChanged(permissionGranted: Boolean) {
+                super.onPermissionChanged(permissionGranted)
+                if (permissionGranted) emitErrorEvent(EventType.PERMISSION_ERROR, false, null)
+                else emitErrorEvent(EventType.PERMISSION_ERROR, true, "Bluetooth Permission denied!")
+            }
+        })
         _subscribeOptions = SubscribeOptions.Builder()
                 .setStrategy(Strategy.Builder().zze(NearbyPermissions.BLE).setTtlSeconds(Strategy.TTL_SECONDS_INFINITE).build())
                 .setCallback(object : SubscribeCallback() {
                     override fun onExpired() {
                         super.onExpired()
-                        Log.i(name, "No longer subscribing")
+                        Log.i(name, "GNM_BLE: No longer subscribing")
+                        _isSubscribed = false
                         emitErrorEvent(EventType.BLUETOOTH_ERROR, true, "Subscribe expired!")
                     }
                 }).build()
@@ -92,61 +93,68 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
                 .setCallback(object : PublishCallback() {
                     override fun onExpired() {
                         super.onExpired()
-                        Log.i(name, "No longer publishing")
+                        Log.i(name, "GNM_BLE: No longer publishing")
+                        _publishedMessage = null
                         emitErrorEvent(EventType.BLUETOOTH_ERROR, true, "Publish expired!")
                     }
                 }).build()
         _isSubscribed = false
+        Log.d(name, "GNM_BLE: Connected!")
         promise.resolve(null)
-        Log.d(name, "Connected!")
     }
 
     @ReactMethod
     fun disconnect() {
+        if (_messagesClient != null) {
+            if (_isSubscribed) _messagesClient!!.unsubscribe(_listener!!)
+            if (_publishedMessage != null) _messagesClient!!.unpublish(_publishedMessage!!)
+        }
         _listener = null
-        _messagesClient = null
         _subscribeOptions = null
         _publishOptions = null
         _isSubscribed = false
+        _publishedMessage = null
+        _messagesClient = null
     }
 
     @ReactMethod
     fun subscribe(promise: Promise) {
-        Log.d(name, "Subscribing...")
+        Log.d(name, "GNM_BLE: Subscribing...")
         if (_messagesClient != null) {
             if (_isSubscribed) {
                 promise.reject(Exception("An existing callback is already subscribed to the Google Nearby Messages API! Please unsubscribe before subscribing again!"))
             } else {
                 _messagesClient!!.subscribe(_listener!!, _subscribeOptions!!).addOnCompleteListener { task ->
-                    val e = task.exception
-                    val success = task.isSuccessful
-                    Log.d(name, "Subscribed! Successful: $success")
-                    if (e != null) {
-                        _isSubscribed = false
-                        promise.reject(mapApiException(e))
-                    } else {
+                    Log.d(name, "GNM_BLE: Subscribed! Successful: ${task.isSuccessful}")
+                    if (task.isSuccessful) {
                         _isSubscribed = true
                         promise.resolve(null)
+                    } else {
+                        _isSubscribed = false
+                        val e = task.exception
+                        if (e != null) promise.reject(mapApiException(e))
+                        else promise.reject(Exception("The task was not successful, but no Exception was thrown."))
                     }
                 }
             }
         } else {
-            promise.reject(Exception("The Messages Client was null. Did the GoogleNearbyMessagesModule native constructor fail to execute?"))
+            promise.reject(Exception("The Messages Client was null. Call connect() before using subscribe or publish!"))
         }
     }
 
     @ReactMethod
     fun unsubscribe(promise: Promise) {
-        Log.d(name, "Unsubscribing...")
+        Log.d(name, "GNM_BLE: Unsubscribing...")
         if (_messagesClient != null) {
             _messagesClient!!.unsubscribe(_listener!!).addOnCompleteListener { task ->
-                Log.d(name, "Unsubscribed!")
-                val e = task.exception
-                if (e != null) {
-                    promise.reject(mapApiException(e))
-                } else {
+                Log.d(name, "GNM_BLE: Unsubscribed! Successful: ${task.isSuccessful}")
+                if (task.isSuccessful) {
                     _isSubscribed = false
                     promise.resolve(null)
+                } else {
+                    val e = task.exception
+                    if (e != null) promise.reject(mapApiException(e))
+                    else promise.reject(Exception("The task was not successful, but no Exception was thrown."))
                 }
             }
         } else {
@@ -162,12 +170,14 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
             } else {
                 _publishedMessage = Message(message.toByteArray())
                 _messagesClient!!.publish(_publishedMessage!!, _publishOptions!!).addOnCompleteListener { task ->
-                    val e = task.exception
-                    if (e != null) {
-                        _publishedMessage = null
-                        promise.reject(mapApiException(e))
-                    } else {
+                    Log.d(name, "GNM_BLE: Published! Successful: ${task.isSuccessful}")
+                    if (task.isSuccessful) {
                         promise.resolve(null)
+                    } else {
+                        _publishedMessage = null
+                        val e = task.exception
+                        if (e != null) promise.reject(mapApiException(e))
+                        else promise.reject(Exception("The task was not successful, but no Exception was thrown."))
                     }
                 }
             }
@@ -181,16 +191,16 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
         if (_messagesClient != null) {
             if (_publishedMessage != null) {
                 _messagesClient!!.unpublish(_publishedMessage!!).addOnCompleteListener { task ->
-                    val e = task.exception
-                    if (e != null) {
-                        promise.reject(mapApiException(e))
-                    } else {
+                    Log.d(name, "GNM_BLE: Unpublished! Successful: ${task.isSuccessful}")
+                    if (task.isSuccessful) {
                         _publishedMessage = null
                         promise.resolve(null)
+                    } else {
+                        val e = task.exception
+                        if (e != null) promise.reject(mapApiException(e))
+                        else promise.reject(Exception("The task was not successful, but no Exception was thrown."))
                     }
                 }
-            } else {
-                promise.reject(Exception("The last published message was null. Did you publish before calling unpublish?"))
             }
         } else {
             promise.reject(Exception("The Messages Client was null. Did the GoogleNearbyMessagesModule native constructor fail to execute?"))
@@ -209,7 +219,7 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
             promise.resolve(false)
         } else {
             val isPlayServicesAvailable = isGooglePlayServicesAvailable(true)
-            promise.resolve(isPlayServicesAvailable)
+            promise.resolve(isPlayServicesAvailable && isMinimumAndroidVersion)
         }
     }
 
@@ -217,7 +227,7 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
     fun onFound(message: Message) {
         if (message.content != null) {
             val messageString = String(message.content)
-            Log.d(name, "Found message: $messageString")
+            Log.d(name, "GNM_BLE: Found message: $messageString")
             emitMessageEvent(EventType.MESSAGE_FOUND, messageString)
         } else {
             emitMessageEvent(EventType.MESSAGE_NO_DATA_ERROR, "message has no data!")
@@ -227,34 +237,44 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
     fun onLost(message: Message) {
         if (message.content != null) {
             val messageString = String(message.content)
-            Log.d(name, "Lost message: $messageString")
+            Log.d(name, "GNM_BLE: Lost message: $messageString")
             emitMessageEvent(EventType.MESSAGE_LOST, messageString)
         } else {
             emitMessageEvent(EventType.MESSAGE_NO_DATA_ERROR, "message has no data!")
         }
     }
 
+    private fun isGooglePlayServicesAvailable(showErrorDialog: Boolean): Boolean {
+        val googleApi = GoogleApiAvailability.getInstance()
+        val availability = googleApi.isGooglePlayServicesAvailable(context)
+        val result = availability == ConnectionResult.SUCCESS
+        if (!result &&
+                showErrorDialog &&
+                googleApi.isUserResolvableError(availability)) {
+            googleApi.getErrorDialog(currentActivity, availability, PLAY_SERVICES_RESOLUTION_REQUEST).show()
+        }
+        return result
+    }
 
     // React Native Lifecycle Methods
     override fun onHostResume() {
-        Log.d(name, "onHostResume")
+        Log.d(name, "GNM_BLE: onHostResume")
         // TODO: On Host Resume
     }
 
     override fun onHostPause() {
-        Log.d(name, "onHostPause")
+        Log.d(name, "GNM_BLE: onHostPause")
         // TODO: On Host Pause
     }
 
     override fun onHostDestroy() {
-        Log.d(name, "onHostDestroy")
-        if (_publishedMessage != null) _messagesClient!!.unpublish(_publishedMessage!!)
-        if (_isSubscribed) _messagesClient!!.unsubscribe(_listener!!)
-        // TODO: Additional cleanup? Is BLE now disabled? who knows
+        Log.d(name, "GNM_BLE: onHostDestroy")
+        disconnect()
     }
 
     override fun onCatalystInstanceDestroy() {
-        Log.d(name, "onCatalystInstanceDestroy")
+        Log.d(name, "GNM_BLE: onCatalystInstanceDestroy")
+        disconnect()
     }
 
     override fun getName(): String {

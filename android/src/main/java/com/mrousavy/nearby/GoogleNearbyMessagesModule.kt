@@ -233,10 +233,12 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
     // React Native Lifecycle Methods
     override fun onHostResume() {
         Log.d(name, "onHostResume")
+        // TODO: On Host Resume
     }
 
     override fun onHostPause() {
         Log.d(name, "onHostPause")
+        // TODO: On Host Pause
     }
 
     override fun onHostDestroy() {

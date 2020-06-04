@@ -33,7 +33,7 @@ See the [example app](example/).
 
 1. Add bluetooth permissions (`NSBluetoothPeripheralUsageDescription`, `NSBluetoothAlwaysUsageDescription`) to `Info.plist`
 2. Create your API Key at [the Google Developer Console](https://console.developers.google.com/flows/enableapi?apiid=copresence&keyType=CLIENT_SIDE_IOS&reusekey=true).
-3. (Optionally): Add the [react-native-permissions](https://github.com/react-native-community/react-native-permissions) library to check if Bluetooth is available on the device (it is `'unavailable'` on iOS Simulators!) If it's unavailable, calls to subscribe or publish might crash the app (`EXC_BAD_ACCESS`) so only call if Bluetooth permission is `denied`, `granted` or `blocked`.
+3. (Optionally): Add the [react-native-permissions](https://github.com/react-native-community/react-native-permissions) library to check if Bluetooth is available on the device (it's `'unavailable'` on iOS Simulators!) If it's `'unavailable'`, calls to subscribe or publish might crash the app (`EXC_BAD_ACCESS`) so only call if Bluetooth permission is `denied`, `granted` or `blocked`. This library will handle the permission checking for you when you call `publish()` or `subscribe()` for the first time.
 4. Pass the generated API Key as a parameter using the `connect` function
 
 ### Android Setup
@@ -60,7 +60,8 @@ See the [example app](example/).
     </manifest>
     ```
 
-3. Call `connect` without any key.
+3. (Optionally): Call `checkBluetoothAvailability()` to ensure that Bluetooth capabilities are available on the current device.
+4. Call `connect` without any key.
 
 ### Publishing
 
@@ -102,12 +103,22 @@ disconnect();
 
 > Make sure to unpublish, disconnect and remove any listeners as they won't be removed automatically! I don't know if that's possible, if so, please create a Pull Request.
 
-### Bluetooth Permissions
+### Bluetooth Availability
+
+Check if the user has granted Bluetooth Permissions. (on Android, this function always returns `true`)
 
 ```ts
 import { checkBluetoothPermission } from 'react-native-google-nearby-messages';
 
 const hasPermission = await checkBluetoothPermission();
+```
+
+Check if bluetooth is available on this device. (on iOS, this function always returns `true`, even when Bluetooth is not available, e.g. on a Simulator. Make sure to use a library like **react-native-permissions** to check if Bluetooth is really available, otherwise your Application will crash with a `EXEC_BAD_ACCESS` error.)
+
+```ts
+import { checkBluetoothAvailability } from 'react-native-google-nearby-messages';
+
+const isBluetoothAvailable = await checkBluetoothAvailability();
 ```
 
 ## Troubleshooting

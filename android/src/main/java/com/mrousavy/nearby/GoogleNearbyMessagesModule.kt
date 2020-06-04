@@ -259,16 +259,17 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
     // React Native Lifecycle Methods
     override fun onHostResume() {
         Log.d(name, "GNM_BLE: onHostResume")
-        // TODO: On Host Resume
+        // TODO: On Host Resume? I think the Nearby API automatically manages this using the context
     }
 
     override fun onHostPause() {
         Log.d(name, "GNM_BLE: onHostPause")
-        // TODO: On Host Pause
+        // TODO: On Host Pause? I think the Nearby API automatically manages this using the context
     }
 
     override fun onHostDestroy() {
         Log.d(name, "GNM_BLE: onHostDestroy")
+        // TODO: Does this fire twice? (Because of onCatalystInstanceDestroy, and maybe Nearby API onHostDestroy...)
         disconnect()
     }
 

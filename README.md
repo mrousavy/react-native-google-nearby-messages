@@ -114,7 +114,7 @@ const hasPermission = await checkBluetoothPermission();
 
 If you're having any trouble getting the Nearby API working, please make sure you're aware of these steps:
 
-1. The library only supports BLE (bluetooth low energy). You can change it in the `GoogleNearbyMessagesModule.java` and `GoogleNearbyMessages.swift` files yourself, or create a pull-request with a customizable constructor.
+1. The library only supports BLE (bluetooth low energy). You can change it in the `GoogleNearbyMessagesModule.kt` and `GoogleNearbyMessages.swift` files yourself, or create a pull-request with a customizable constructor.
 2. The JS error codes (promise rejectors) should tell you enough information on what went wrong, check [this doc page](https://developers.google.com/android/reference/com/google/android/gms/nearby/messages/NearbyMessagesStatusCodes) on more information about each individual error code.
 3. Make sure your device has BLE capabilities and the App has Permission to use those. Include the required Permissions in `Info.plist` and `AndroidManifest.xml`. Also try adding the `INTERNET`, `ACCESS_FINE_LOCATION` and `ACCESS_COARSE_LOCATION` permissions if nothing else works.
 4. Make sure your API Key is valid!

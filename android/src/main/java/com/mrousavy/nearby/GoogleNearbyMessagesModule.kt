@@ -1,6 +1,7 @@
 package com.mrousavy.nearby
 
 import android.Manifest
+import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -14,9 +15,15 @@ import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.messages.*
 
+
 class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext), LifecycleEventListener {
     private enum class EventType(private val _type: String) {
-        MESSAGE_FOUND("MESSAGE_FOUND"), MESSAGE_LOST("MESSAGE_LOST"), BLUETOOTH_ERROR("BLUETOOTH_ERROR"), PERMISSION_ERROR("PERMISSION_ERROR"), MESSAGE_NO_DATA_ERROR("MESSAGE_NO_DATA_ERROR"), UNSUPPORTED_ERROR("UNSUPPORTED_ERROR");
+        MESSAGE_FOUND("MESSAGE_FOUND"),
+        MESSAGE_LOST("MESSAGE_LOST"),
+        BLUETOOTH_ERROR("BLUETOOTH_ERROR"),
+        PERMISSION_ERROR("PERMISSION_ERROR"), // doesn't exist on Android
+        MESSAGE_NO_DATA_ERROR("MESSAGE_NO_DATA_ERROR"),
+        UNSUPPORTED_ERROR("UNSUPPORTED_ERROR");
 
         override fun toString(): String {
             return _type
@@ -178,8 +185,8 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
                     if (e != null) {
                         promise.reject(mapApiException(e))
                     } else {
-                        promise.resolve(null)
                         _publishedMessage = null
+                        promise.resolve(null)
                     }
                 }
             } else {
@@ -192,24 +199,34 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
 
     @ReactMethod
     fun checkBluetoothPermission(promise: Promise) {
-        if (ContextCompat.checkSelfPermission(context!!, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            promise.resolve(true)
-        } else {
+        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+        if (bluetoothAdapter == null) {
             promise.resolve(false)
+        } else {
+            val isPlayServicesAvailable = isGooglePlayServicesAvailable(true)
+            promise.resolve(isPlayServicesAvailable)
         }
     }
 
     // Google Nearby Messages API Callbacks
     fun onFound(message: Message) {
-        val messageString = String(message.content)
-        Log.d(name, "Found message: $messageString")
-        emitMessageEvent(EventType.MESSAGE_FOUND, messageString)
+        if (message.content != null) {
+            val messageString = String(message.content)
+            Log.d(name, "Found message: $messageString")
+            emitMessageEvent(EventType.MESSAGE_FOUND, messageString)
+        } else {
+            emitMessageEvent(EventType.MESSAGE_NO_DATA_ERROR, "message has no data!")
+        }
     }
 
     fun onLost(message: Message) {
-        val messageString = String(message.content)
-        Log.d(name, "Lost message: $messageString")
-        emitMessageEvent(EventType.MESSAGE_LOST, messageString)
+        if (message.content != null) {
+            val messageString = String(message.content)
+            Log.d(name, "Lost message: $messageString")
+            emitMessageEvent(EventType.MESSAGE_LOST, messageString)
+        } else {
+            emitMessageEvent(EventType.MESSAGE_NO_DATA_ERROR, "message has no data!")
+        }
     }
 
 

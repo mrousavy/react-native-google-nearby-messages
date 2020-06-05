@@ -37,6 +37,10 @@ class NearbyMessages: RCTEventEmitter {
 	private var messageManager: GNSMessageManager? = nil
 	private var currentPublication: GNSPublication? = nil
 	private var currentSubscription: GNSSubscription? = nil
+	// workaround objects for checkBluetoothAvailability
+	private var tempBluetoothManager: CBCentralManager? = nil
+	private var tempBluetoothManagerDelegate: CBCentralManagerDelegate? = nil
+	private var didCallback = false
 
 	@objc(connect:resolver:rejecter:)
 	func connect(_ apiKey: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
@@ -150,9 +154,46 @@ class NearbyMessages: RCTEventEmitter {
 	}
 
 	@objc(checkBluetoothAvailability:rejecter:)
-	func checkBluetoothAvailability(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
-		// TODO: Check if this device supports bluetooth. e.g.: On a Simulator it should resolve to no.
-		resolve(true)
+	func checkBluetoothAvailability(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) -> Void {
+		if (self.tempBluetoothManager != nil || self.tempBluetoothManagerDelegate != nil) {
+			let error = GoogleNearbyMessagesError.runtimeError(message: "Another Bluetooth availability check is already in progress!")
+			reject("GOOGLE_NEARBY_MESSAGES_CHECKBLUETOOTH_ERROR", error.localizedDescription, error)
+			return
+		}
+		self.didCallback = false
+		class BluetoothManagerDelegate : NSObject, CBCentralManagerDelegate {
+			private var promiseResolver: RCTPromiseResolveBlock
+			private weak var parentReference: NearbyMessages?
+			init(resolver: @escaping RCTPromiseResolveBlock, parentReference: NearbyMessages) {
+				self.promiseResolver = resolver
+				self.parentReference = parentReference
+			}
+			
+			func centralManagerDidUpdateState(_ central: CBCentralManager) {
+				guard let parent = parentReference else {
+					return
+				}
+				if (!parent.didCallback) {
+					parent.didCallback = true
+					print("GNM_BLE: CBCentralManager did update state with \(central.state.rawValue)")
+					self.promiseResolver(central.state == .poweredOn)
+					parent.tempBluetoothManager = nil
+					parent.tempBluetoothManagerDelegate = nil
+				}
+			}
+		}
+		tempBluetoothManagerDelegate = BluetoothManagerDelegate(resolver: resolve, parentReference: self)
+		tempBluetoothManager = CBCentralManager(delegate: tempBluetoothManagerDelegate, queue: nil)
+		
+		DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(10)) {
+			if (!self.didCallback) {
+				self.didCallback = true
+				let error = GoogleNearbyMessagesError.runtimeError(message: "The CBCentralManager (Bluetooth) did not power on after 10 seconds. Cancelled execution.")
+				reject("GOOGLE_NEARBY_MESSAGES_CHECKBLUETOOTH_TIMEOUT", error.localizedDescription, error)
+				self.tempBluetoothManager = nil
+				self.tempBluetoothManagerDelegate = nil
+			}
+		}
 	}
 
 	func hasBluetoothPermission() -> Bool {

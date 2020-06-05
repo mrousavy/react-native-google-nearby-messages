@@ -15,6 +15,7 @@ import {
   publish,
   subscribe,
   checkBluetoothPermission,
+  checkBluetoothAvailability,
   addOnErrorListener,
 } from 'react-native-google-nearby-messages';
 
@@ -53,8 +54,12 @@ export default class App extends Component {
         {
           text: 'Only check Bluetooth Permission',
           onPress: async () => {
-            const result = await checkBluetoothPermission();
-            Alert.alert('Bluetooth Permissions:', `Granted: ${result}`);
+            const permission = await checkBluetoothPermission();
+            const available = await checkBluetoothAvailability();
+            Alert.alert(
+              'Bluetooth Permissions:',
+              `Granted: ${permission}, Available: ${available}`,
+            );
           },
         },
       ],

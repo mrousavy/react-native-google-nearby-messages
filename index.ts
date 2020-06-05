@@ -89,7 +89,7 @@ export function unpublish(): void {
 /**
  * Checks if the app is allowed to use the Bluetooth API.
  *
- * **On Android**, this function always returns true, as Bluetooth is a non-dangerous permission.
+ * **On Android**, this function checks if both `BLUETOOTH` and `BLUETOOTH_ADMIN` permissions are granted in the ContextCompat.
  *
  * **On iOS**, this function checks if the User has given Bluetooth Permission using the CoreBluetooth API (`CBManager.authorization`). If not yet asked, a "grant permission?" dialog will pop up.
  */
@@ -102,7 +102,7 @@ export function checkBluetoothPermission(): Promise<boolean> {
  *
  * **On Android**, this function checks if a `BluetoothAdapter` can be found, and if the Google Play Services are available (required for Google Nearby API).
  *
- * **On iOS**, this function always returns true, even on Simulators. Use react-native-permissions to check if Bluetooth is really supported, otherwise any calls to this API will result in a fatal App crash! (`EXEC_BAD_ACCESS`)
+ * **On iOS**, this function powers on the `CBCentralManager` and returns `true` if it was successfully turned on. If no callback was sent within `10` seconds, a timeout error will be thrown.
  */
 export function checkBluetoothAvailability(): Promise<boolean> {
     return GoogleNearbyMessages.checkBluetoothAvailability();

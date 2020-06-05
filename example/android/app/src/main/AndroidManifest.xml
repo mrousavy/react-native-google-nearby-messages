@@ -17,7 +17,7 @@
       android:theme="@style/AppTheme">
     <meta-data
       android:name="com.google.android.nearby.messages.API_KEY"
-      android:value="<yourapikey>" />
+      android:value="(yourapikey)" />
       <activity
         android:name=".MainActivity"
         android:label="@string/app_name"

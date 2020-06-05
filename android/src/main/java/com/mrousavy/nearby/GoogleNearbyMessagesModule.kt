@@ -209,7 +209,9 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
 
     @ReactMethod
     fun checkBluetoothPermission(promise: Promise) {
-        promise.resolve(true);
+        val granted = ContextCompat.checkSelfPermission(reactApplicationContext, Manifest.permission.BLUETOOTH) == PackageManager.PERMISSION_GRANTED
+        val grantedAdmin = ContextCompat.checkSelfPermission(reactApplicationContext, Manifest.permission.BLUETOOTH_ADMIN) == PackageManager.PERMISSION_GRANTED
+        promise.resolve(granted && grantedAdmin)
     }
 
     @ReactMethod

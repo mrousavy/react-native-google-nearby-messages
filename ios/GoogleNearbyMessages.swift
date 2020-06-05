@@ -221,7 +221,7 @@ class NearbyMessages: RCTEventEmitter {
 	// Called when the UIView gets destroyed (e.g. App reload)
 	@objc
 	func invalidate() {
-		disconnect()
 		print("GNM_BLE: invalidate")
+		disconnect()
 	}
 }

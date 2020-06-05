@@ -17,7 +17,6 @@ class NearbyMessages: RCTEventEmitter {
 		case BLUETOOTH_ERROR
 		case PERMISSION_ERROR
 		case MESSAGE_NO_DATA_ERROR
-		case UNSUPPORTED_ERROR
 	}
 	enum GoogleNearbyMessagesError: Error, LocalizedError {
 		case permissionError(permissionName: String)
@@ -168,7 +167,7 @@ class NearbyMessages: RCTEventEmitter {
 				self.promiseResolver = resolver
 				self.parentReference = parentReference
 			}
-			
+
 			func centralManagerDidUpdateState(_ central: CBCentralManager) {
 				guard let parent = parentReference else {
 					return
@@ -184,7 +183,7 @@ class NearbyMessages: RCTEventEmitter {
 		}
 		tempBluetoothManagerDelegate = BluetoothManagerDelegate(resolver: resolve, parentReference: self)
 		tempBluetoothManager = CBCentralManager(delegate: tempBluetoothManagerDelegate, queue: nil)
-		
+
 		DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(10)) {
 			if (!self.didCallback) {
 				self.didCallback = true

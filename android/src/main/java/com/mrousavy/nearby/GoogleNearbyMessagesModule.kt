@@ -22,8 +22,7 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
         MESSAGE_LOST("MESSAGE_LOST"),
         BLUETOOTH_ERROR("BLUETOOTH_ERROR"),
         PERMISSION_ERROR("PERMISSION_ERROR"), // doesn't exist on Android
-        MESSAGE_NO_DATA_ERROR("MESSAGE_NO_DATA_ERROR"),
-        UNSUPPORTED_ERROR("UNSUPPORTED_ERROR");
+        MESSAGE_NO_DATA_ERROR("MESSAGE_NO_DATA_ERROR");
 
         override fun toString(): String {
             return _type
@@ -47,17 +46,14 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
         Log.d(name, "GNM_BLE: Connecting...")
         if (!isMinimumAndroidVersion) {
             promise.reject(Exception("UNSUPPORTED_ERROR: Current Android version is too low: ${Build.VERSION.SDK_INT}"))
-            emitErrorEvent(EventType.UNSUPPORTED_ERROR, true, "Current Android version is too low: ${Build.VERSION.SDK_INT}")
             return
         }
         if (!isGooglePlayServicesAvailable(true)) {
             promise.reject(Exception("UNSUPPORTED_ERROR: Google Play Services are not available on this device."))
-            emitErrorEvent(EventType.UNSUPPORTED_ERROR, true, "Google Play Services are not available on this device.")
             return
         }
         if (BluetoothAdapter.getDefaultAdapter() == null) {
             promise.reject(Exception("UNSUPPORTED_ERROR: No default Bluetooth adapter could be found."))
-            emitErrorEvent(EventType.UNSUPPORTED_ERROR, true, "No default Bluetooth adapter could be found.")
             return
         }
         _listener = object : MessageListener() {

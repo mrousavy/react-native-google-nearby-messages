@@ -24,7 +24,7 @@ interface BridgeErrorEvent {
 export async function connect(apiKey?: string): Promise<() => void> {
     if (Platform.OS === 'ios' && apiKey == null) throw new Error('API Key is required on iOS!');
     await GoogleNearbyMessages.connect(apiKey);
-    return GoogleNearbyMessages.disconnect;
+    return () => GoogleNearbyMessages.disconnect();
 }
 
 /**
@@ -76,7 +76,7 @@ export function unsubscribe(): void {
  */
 export async function publish(message: string): Promise<() => void> {
     await GoogleNearbyMessages.publish(message);
-    return unpublish;
+    return () => unpublish();
 }
 
 /**
@@ -125,10 +125,10 @@ export function addOnErrorListener(callback: (kind: 'BLUETOOTH_ERROR' | 'PERMISS
 
 function onEvent(event: EventType, callback: (message?: string) => void): () => void {
     const subscription = nearbyEventEmitter.addListener(event, (data: BridgeMessageEvent) => callback(data.message));
-    return subscription.remove;
+    return () => subscription.remove();
 }
 
 function onErrorEvent(event: EventType, callback: (hasError?: boolean, message?: string) => void): () => void {
     const subscription = nearbyEventEmitter.addListener(event, (data: BridgeErrorEvent) => callback(data.hasError, data.message));
-    return subscription.remove;
+    return () => subscription.remove();
 }

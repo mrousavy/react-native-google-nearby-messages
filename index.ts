@@ -1,4 +1,5 @@
 import { NativeModules, NativeEventEmitter, Platform } from 'react-native';
+import { useEffect, useState, useCallback } from 'react';
 
 const { GoogleNearbyMessages } = NativeModules;
 const nearbyEventEmitter = new NativeEventEmitter(GoogleNearbyMessages);
@@ -130,4 +131,91 @@ function onEvent(event: EventType, callback: (message?: string) => void): () => 
 function onErrorEvent(event: EventType, callback: (message?: string) => void): () => void {
     const subscription = nearbyEventEmitter.addListener(event, (data: BridgeErrorEvent) => callback(data.message));
     return () => subscription.remove();
+}
+
+
+
+
+// MARK: REACT HOOKS
+/**
+ * The current state of the Google Nearby API (used in hooks)
+ */
+export type NearbyState = 'connecting' | 'publishing' | 'published' | 'subscribing' | 'subscribed' | 'error';
+
+/**
+ * Publish a simple message.
+ * @param apiKey The Google API Key - required on iOS
+ * @param message The message to publish
+ */
+export function usePublication(apiKey: string, message: string) {
+  useEffect(() => {
+    const start = async () => {
+      await connect(apiKey);
+      await publish(message);
+    };
+
+    start();
+    return () => disconnect();
+  });
+}
+
+/**
+ * Publish a simple message and return the current state of the nearby API
+ * @param apiKey The Google API Key - required on iOS
+ * @param message The message to publish
+ * @returns The current state of the Nearby API
+ */
+export function usePublicationWithState(apiKey: string, message: string): NearbyState {
+  const [nearbyState, setNearbyState] = useState<NearbyState>('connecting')
+
+  useEffect(() => {
+    const start = async () => {
+      try {
+        await connect(apiKey);
+        setNearbyState('publishing');
+        await publish(message);
+        setNearbyState('published');
+      } catch (e) {
+        setNearbyState('error');
+      }
+    };
+
+    start();
+    return () => disconnect();
+  });
+
+  return nearbyState;
+}
+
+/**
+ * Subscribe to nearby messages and return an array of all nearby messages.
+ * @param apiKey The Google API Key - required on iOS
+ * @returns A state of all nearby messages
+ */
+export function useSubscription(apiKey: string): string[] {
+  const [nearbyMessages, setNearbyMessages] = useState<string[]>([]);
+
+  const messageFound = useCallback((message) => {
+    nearbyMessages.push(message);
+    setNearbyMessages(nearbyMessages);
+  }, [nearbyMessages, setNearbyMessages]);
+  const messageLost = useCallback((message) => {
+    const index = nearbyMessages.findIndex((m) => m === message);
+    if (index > -1) {
+      nearbyMessages.splice(index, 1);
+      setNearbyMessages(nearbyMessages);
+    }
+  }, [nearbyMessages, setNearbyMessages]);
+
+  useEffect(() => {
+    const start = async () => {
+      await connect(apiKey);
+      await subscribe(messageFound, messageLost)
+    };
+
+    start();
+    return () => disconnect();
+  });
+
+  return nearbyMessages;
 }

@@ -70,8 +70,7 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
         _messagesClient!!.registerStatusCallback(object : StatusCallback() {
             override fun onPermissionChanged(permissionGranted: Boolean) {
                 super.onPermissionChanged(permissionGranted)
-                if (permissionGranted) emitErrorEvent(EventType.PERMISSION_ERROR, false, null)
-                else emitErrorEvent(EventType.PERMISSION_ERROR, true, "Bluetooth Permission denied!")
+                if (!permissionGranted) emitErrorEvent(EventType.PERMISSION_ERROR, "Bluetooth Permission denied!")
             }
         })
         _subscribeOptions = SubscribeOptions.Builder()
@@ -81,7 +80,7 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
                         super.onExpired()
                         Log.i(name, "GNM_BLE: No longer subscribing")
                         _isSubscribed = false
-                        emitErrorEvent(EventType.BLUETOOTH_ERROR, true, "Subscribe expired!")
+                        emitErrorEvent(EventType.BLUETOOTH_ERROR, "Subscribe expired!")
                     }
                 }).build()
         _publishOptions = PublishOptions.Builder()
@@ -91,7 +90,7 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
                         super.onExpired()
                         Log.i(name, "GNM_BLE: No longer publishing")
                         _publishedMessage = null
-                        emitErrorEvent(EventType.BLUETOOTH_ERROR, true, "Publish expired!")
+                        emitErrorEvent(EventType.BLUETOOTH_ERROR, "Publish expired!")
                     }
                 }).build()
         _isSubscribed = false
@@ -319,9 +318,8 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
         context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java).emit(event.toString(), params)
     }
 
-    private fun emitErrorEvent(event: EventType, hasError: Boolean, message: String?) {
+    private fun emitErrorEvent(event: EventType, message: String?) {
         val params = Arguments.createMap()
-        params.putString("hasError", hasError.toString())
         if (message != null) {
             params.putString("message", message)
         }

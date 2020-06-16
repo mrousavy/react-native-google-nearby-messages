@@ -8,7 +8,6 @@ interface BridgeMessageEvent {
     message?: string;
 }
 interface BridgeErrorEvent {
-    hasError?: boolean;
     message?: string;
 }
 
@@ -110,12 +109,12 @@ export function checkBluetoothAvailability(): Promise<boolean> {
 
 /**
  * Subscribe to any errors.
- * @param callback The function to call when an error occurs. Kind is the Error Type, and hasError specifies where there currently is an Error. e.g.: User turns Bluetooth off, callback gets called with ('BLUETOOTH_ERROR', true). When the User turns Bluetooth back on, callback gets called again with ('BLUETOOTH_ERROR', false).
+ * @param callback The function to call when an error occurs. `kind` is the Error Type. e.g.: User turns Bluetooth off, callback gets called with ('BLUETOOTH_ERROR', true). When the User turns Bluetooth back on, callback gets called again with ('BLUETOOTH_ERROR', false).
  */
-export function addOnErrorListener(callback: (kind: 'BLUETOOTH_ERROR' | 'PERMISSION_ERROR' | 'MESSAGE_NO_DATA_ERROR', hasError?: boolean, message?: string) => void): () => void {
-    const bluetoothErrorUnsubscribe = onErrorEvent('BLUETOOTH_ERROR', (h, m) => callback('BLUETOOTH_ERROR', h, m));
-    const permissionErrorUnsubscribe = onErrorEvent('PERMISSION_ERROR', (h, m) => callback('PERMISSION_ERROR', h, m));
-    const messageNoDataErrorUnsubscribe = onErrorEvent('MESSAGE_NO_DATA_ERROR', (h, m) => callback('MESSAGE_NO_DATA_ERROR', h, m));
+export function addOnErrorListener(callback: (kind: 'BLUETOOTH_ERROR' | 'PERMISSION_ERROR' | 'MESSAGE_NO_DATA_ERROR', message?: string) => void): () => void {
+    const bluetoothErrorUnsubscribe = onErrorEvent('BLUETOOTH_ERROR', (m) => callback('BLUETOOTH_ERROR', m));
+    const permissionErrorUnsubscribe = onErrorEvent('PERMISSION_ERROR', (m) => callback('PERMISSION_ERROR', m));
+    const messageNoDataErrorUnsubscribe = onErrorEvent('MESSAGE_NO_DATA_ERROR', (m) => callback('MESSAGE_NO_DATA_ERROR', m));
     return () => {
         bluetoothErrorUnsubscribe();
         permissionErrorUnsubscribe();
@@ -128,7 +127,7 @@ function onEvent(event: EventType, callback: (message?: string) => void): () => 
     return () => subscription.remove();
 }
 
-function onErrorEvent(event: EventType, callback: (hasError?: boolean, message?: string) => void): () => void {
-    const subscription = nearbyEventEmitter.addListener(event, (data: BridgeErrorEvent) => callback(data.hasError, data.message));
+function onErrorEvent(event: EventType, callback: (message?: string) => void): () => void {
+    const subscription = nearbyEventEmitter.addListener(event, (data: BridgeErrorEvent) => callback(data.message));
     return () => subscription.remove();
 }

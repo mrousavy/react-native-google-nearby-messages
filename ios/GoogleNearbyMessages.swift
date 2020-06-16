@@ -50,13 +50,19 @@ class NearbyMessages: RCTEventEmitter {
 												paramsBlock: { (params: GNSMessageManagerParams?) in
 													guard let params = params else { return }
 													params.microphonePermissionErrorHandler = { (hasError: Bool) in
-														self.sendEvent(withName: EventType.PERMISSION_ERROR.rawValue, body: [ "hasError": hasError, "message": "Microphone Permission denied!" ]);
+														if (hasError) {
+															self.sendEvent(withName: EventType.PERMISSION_ERROR.rawValue, body: [ "message": "Microphone Permission denied!" ])
+														}
 													}
 													params.bluetoothPowerErrorHandler = { (hasError: Bool) in
-														self.sendEvent(withName: EventType.BLUETOOTH_ERROR.rawValue, body: [ "hasError": hasError, "message": "Bluetooth is powered off/unavailable!" ]);
+														if (hasError) {
+															self.sendEvent(withName: EventType.BLUETOOTH_ERROR.rawValue, body: [ "message": "Bluetooth is powered off/unavailable!" ])
+														}
 													}
 													params.bluetoothPermissionErrorHandler = { (hasError: Bool) in
-														self.sendEvent(withName: EventType.PERMISSION_ERROR.rawValue, body: [ "hasError": hasError, "message": "Bluetooth Permission denied!" ]);
+														if (hasError) {
+															self.sendEvent(withName: EventType.PERMISSION_ERROR.rawValue, body: [ "message": "Bluetooth Permission denied!" ])
+														}
 													}
 
 		})
@@ -111,7 +117,7 @@ class NearbyMessages: RCTEventEmitter {
 			self.currentSubscription = self.messageManager!.subscription(
 				messageFoundHandler: { (message: GNSMessage?) in
 					guard let data = message?.content else {
-						self.sendEvent(withName: EventType.MESSAGE_NO_DATA_ERROR.rawValue, body: [ "hasError": true, "message": "Message does not have any Data!" ] )
+						self.sendEvent(withName: EventType.MESSAGE_NO_DATA_ERROR.rawValue, body: [ "message": "Message does not have any Data!" ] )
 						return
 					}
 					print("GNM_BLE: Found message!")
@@ -119,7 +125,7 @@ class NearbyMessages: RCTEventEmitter {
 				},
 				messageLostHandler: { (message: GNSMessage?) in
 					guard let data = message?.content else {
-						self.sendEvent(withName: EventType.MESSAGE_NO_DATA_ERROR.rawValue, body: [ "hasError": true, "message": "Message does not have any Data!" ] )
+						self.sendEvent(withName: EventType.MESSAGE_NO_DATA_ERROR.rawValue, body: [ "message": "Message does not have any Data!" ] )
 						return
 					}
 					print("GNM_BLE: Lost message!")

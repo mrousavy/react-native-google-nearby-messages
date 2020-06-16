@@ -68,7 +68,7 @@ See the [example app](example/).
 ```ts
 import { connect, publish, addOnErrorListener } from 'react-native-google-nearby-messages';
 
-const removeListener = addOnErrorListener((kind, hasError, message) => console.error(`${kind}: ${hasError} ${message}`));
+const removeListener = addOnErrorListener((kind, message) => console.error(`${kind}: ${message}`));
 const disconnect = await connect('<youriOSAPIkey>');
 const unpublish = await publish('hello !');
 
@@ -85,7 +85,7 @@ disconnect();
 ```ts
 import { connect, subscribe, addOnErrorListener } from 'react-native-google-nearby-messages';
 
-const removeListener = addOnErrorListener((kind, hasError, message) => console.error(`${kind}: ${hasError} ${message}`));
+const removeListener = addOnErrorListener((kind, message) => console.error(`${kind}: ${message}`));
 const disconnect = await connect('<youriOSAPIkey>');
 const unsubscribe = await subscribe(
   (m) => {

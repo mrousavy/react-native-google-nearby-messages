@@ -121,6 +121,75 @@ import { checkBluetoothAvailability } from 'react-native-google-nearby-messages'
 const isBluetoothAvailable = await checkBluetoothAvailability();
 ```
 
+### React Hooks
+
+This library also provides react hooks for common use cases. In case you're not familiar with hooks, please read the [hooks documentation](https://reactjs.org/docs/hooks-intro.html). When the component unmounts, the hooks automatically stop publishing, subscribing, remove error listeners and disconnect for you. You can also look into the [hooks source code](index.ts) and tweak them for your use case.
+
+#### usePublication
+
+Publishes a message.
+
+```ts
+export default function App() {
+  usePublication(API_KEY, 'Hello from Nearby!');
+  // ...
+}
+```
+
+#### usePublicationWithState
+
+Publishes a message and returns a state which describes the Nearby API status.
+
+```ts
+export default function App() {
+  const nearbyState = usePublicationWithState(API_KEY, 'Hello from Nearby!');
+
+  if (nearbyState === 'published') console.log('Nearby has published!');
+  // ...
+}
+```
+
+#### useSubscription
+
+Subscribe to nearby messages and return a state for all messages in an array.
+
+```tsx
+export default function App() {
+  const nearbyMessages = useSubscription(API_KEY);
+  return (
+    <FlatList
+      data={nearbyMessages}
+      renderItem={({ item }) => <Text>{item}</Text>}
+      />
+  );
+}
+```
+
+#### useNearbySearch
+
+Search for a specific message using nearby messages.
+
+```tsx
+export default function App() {
+  const isNearby = useNearbySearch(API_KEY, 'iPhone 11');
+  return (
+    <Text>{isNearby ? 'iPhone 11 is nearby!' : 'iPhone 11 is far, far away.'}</Text>
+  );
+}
+```
+
+#### useNearbyErrorCallback
+
+Subscribe to any errors occuring in the Nearby API.
+
+```ts
+export default function App() {
+  useNearbyErrorCallback((kind, message) => {
+    console.log(`Nearby API Error: ${kind}: ${message}`)
+  });
+}
+```
+
 ## Troubleshooting
 
 If you're having any trouble getting the Nearby API working, please make sure you're aware of these steps:

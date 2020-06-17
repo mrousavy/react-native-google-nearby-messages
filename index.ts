@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 const { GoogleNearbyMessages } = NativeModules;
 const nearbyEventEmitter = new NativeEventEmitter(GoogleNearbyMessages);
 
-export type EventType = 'MESSAGE_FOUND' | 'MESSAGE_LOST' | 'BLUETOOTH_ERROR' | 'PERMISSION_ERROR' | 'MESSAGE_NO_DATA_ERROR';
+export type ErrorType = 'BLUETOOTH_ERROR' | 'PERMISSION_ERROR' | 'MESSAGE_NO_DATA_ERROR';
+export type EventType = 'MESSAGE_FOUND' | 'MESSAGE_LOST' | ErrorType;
 interface BridgeMessageEvent {
     message?: string;
 }
@@ -112,7 +113,7 @@ export function checkBluetoothAvailability(): Promise<boolean> {
  * Subscribe to any errors.
  * @param callback The function to call when an error occurs. `kind` is the Error Type. e.g.: User turns Bluetooth off, callback gets called with ('BLUETOOTH_ERROR', true). When the User turns Bluetooth back on, callback gets called again with ('BLUETOOTH_ERROR', false).
  */
-export function addOnErrorListener(callback: (kind: 'BLUETOOTH_ERROR' | 'PERMISSION_ERROR' | 'MESSAGE_NO_DATA_ERROR', message?: string) => void): () => void {
+export function addOnErrorListener(callback: (kind: ErrorType, message?: string) => void): () => void {
     const bluetoothErrorUnsubscribe = onErrorEvent('BLUETOOTH_ERROR', (m) => callback('BLUETOOTH_ERROR', m));
     const permissionErrorUnsubscribe = onErrorEvent('PERMISSION_ERROR', (m) => callback('PERMISSION_ERROR', m));
     const messageNoDataErrorUnsubscribe = onErrorEvent('MESSAGE_NO_DATA_ERROR', (m) => callback('MESSAGE_NO_DATA_ERROR', m));
@@ -128,7 +129,7 @@ function onEvent(event: EventType, callback: (message?: string) => void): () => 
     return () => subscription.remove();
 }
 
-function onErrorEvent(event: EventType, callback: (message?: string) => void): () => void {
+function onErrorEvent(event: ErrorType, callback: (message?: string) => void): () => void {
     const subscription = nearbyEventEmitter.addListener(event, (data: BridgeErrorEvent) => callback(data.message));
     return () => subscription.remove();
 }
@@ -218,4 +219,41 @@ export function useSubscription(apiKey: string): string[] {
   });
 
   return nearbyMessages;
+}
+
+/**
+ * Search for a specific message using the nearby messages API. Returns a state whether the message has been found or not.
+ * @param apiKey The Google API Key - required on iOS
+ * @param searchFor The string to perform the nearby search for
+ * @returns A state whether the message has been found or not.
+ */
+export function useNearbySearch(apiKey: string, searchFor: string): boolean {
+  const [isNearby, setIsNearby] = useState(false);
+
+  const messageFound = useCallback((message) => {
+    if (message === searchFor) setIsNearby(true);
+  }, [searchFor, setIsNearby]);
+  const messageLost = useCallback((message) => {
+    if (message === searchFor) setIsNearby(false);
+  }, [searchFor, setIsNearby]);
+
+  useEffect(() => {
+    const start = async () => {
+      await connect(apiKey);
+      await subscribe(messageFound, messageLost)
+    };
+
+    start();
+    return () => disconnect();
+  });
+
+  return isNearby;
+}
+
+/**
+ * Add an error listener which automatically disposes when the component unmounts.
+ * @param callback The function to call when an error occurs.
+ */
+export function useNearbyErrorCallback(callback: (kind: ErrorType, message?: string) => void) {
+  useEffect(() => addOnErrorListener(callback))
 }

@@ -157,7 +157,7 @@ export function usePublication(apiKey: string, message: string) {
 
     start();
     return () => disconnect();
-  });
+  }, [apiKey, message]);
 }
 
 /**
@@ -183,7 +183,7 @@ export function usePublicationWithState(apiKey: string, message: string): Nearby
 
     start();
     return () => disconnect();
-  });
+  }, [setNearbyState, apiKey, message]);
 
   return nearbyState;
 }
@@ -216,7 +216,7 @@ export function useSubscription(apiKey: string): string[] {
 
     start();
     return () => disconnect();
-  });
+  }, [apiKey, messageFound, messageLost]);
 
   return nearbyMessages;
 }
@@ -245,7 +245,7 @@ export function useNearbySearch(apiKey: string, searchFor: string): boolean {
 
     start();
     return () => disconnect();
-  });
+  }, [apiKey, messageFound, messageLost]);
 
   return isNearby;
 }
@@ -255,5 +255,5 @@ export function useNearbySearch(apiKey: string, searchFor: string): boolean {
  * @param callback The function to call when an error occurs.
  */
 export function useNearbyErrorCallback(callback: (kind: ErrorType, message?: string) => void) {
-  useEffect(() => addOnErrorListener(callback))
+  useEffect(() => addOnErrorListener(callback), [callback])
 }

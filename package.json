@@ -1,7 +1,7 @@
 {
   "name": "react-native-google-nearby-messages",
   "title": "React Native Google Nearby Messages",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "An async Google Nearby Messages API Wrapper for React Native (Android & iOS)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -105,7 +105,7 @@ disconnect();
 
 ### Bluetooth Availability
 
-Check if the user has granted Bluetooth Permissions. (on Android, this function always returns `true`)
+Check if the user has granted Bluetooth Permissions. This feature is experimental, and strongly differs between iOS and Android.
 
 ```ts
 import { checkBluetoothPermission } from 'react-native-google-nearby-messages';
@@ -113,7 +113,7 @@ import { checkBluetoothPermission } from 'react-native-google-nearby-messages';
 const hasPermission = await checkBluetoothPermission();
 ```
 
-Check if bluetooth is available on this device. (on iOS, this function always returns `true`, even when Bluetooth is not available, e.g. on a Simulator. Make sure to use a library like **react-native-permissions** to check if Bluetooth is really available, otherwise your Application will crash with a `EXEC_BAD_ACCESS` error.)
+Check if bluetooth is available on this device. This feature is experimental, and strongly differs between iOS and Android. Make sure to use a library like **react-native-permissions** to check if Bluetooth is really available, otherwise your Application might crash with a `EXEC_BAD_ACCESS` error. See [troubleshooting](#troubleshooting)
 
 ```ts
 import { checkBluetoothAvailability } from 'react-native-google-nearby-messages';

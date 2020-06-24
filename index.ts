@@ -5,12 +5,12 @@ const { GoogleNearbyMessages } = NativeModules;
 const nearbyEventEmitter = new NativeEventEmitter(GoogleNearbyMessages);
 
 export type ErrorType = 'BLUETOOTH_ERROR' | 'PERMISSION_ERROR' | 'MESSAGE_NO_DATA_ERROR';
-export type EventType = 'MESSAGE_FOUND' | 'MESSAGE_LOST' | ErrorType;
+export type EventType = 'MESSAGE_FOUND' | 'MESSAGE_LOST' | ErrorType;
 interface BridgeMessageEvent {
-    message?: string;
+  message?: string;
 }
 interface BridgeErrorEvent {
-    message?: string;
+  message?: string;
 }
 
 /**
@@ -23,16 +23,16 @@ interface BridgeErrorEvent {
  * disconnect();
  */
 export async function connect(apiKey?: string): Promise<() => void> {
-    if (Platform.OS === 'ios' && apiKey == null) throw new Error('API Key is required on iOS!');
-    await GoogleNearbyMessages.connect(apiKey);
-    return () => GoogleNearbyMessages.disconnect();
+  if (Platform.OS === 'ios' && apiKey == null) throw new Error('API Key is required on iOS!');
+  await GoogleNearbyMessages.connect(apiKey);
+  return () => GoogleNearbyMessages.disconnect();
 }
 
 /**
  * Disconnect the Google Nearby Messages API. Also removes any existing subscriptions or publications.
  */
 export function disconnect(): void {
-    GoogleNearbyMessages.disconnect();
+  GoogleNearbyMessages.disconnect();
 }
 
 /**
@@ -49,21 +49,21 @@ export function disconnect(): void {
  *  unsubscribe();
  */
 export async function subscribe(onMessageFound?: (message?: string) => void, onMessageLost?: (message?: string) => void): Promise<() => void> {
-    await GoogleNearbyMessages.subscribe();
-    const onMessageFoundUnsubscribe = onMessageFound ? onEvent('MESSAGE_FOUND', onMessageFound) : undefined;
-    const onMessageLostUnsubscribe = onMessageLost ? onEvent('MESSAGE_LOST', onMessageLost) : undefined;
-    return () => {
-        if (onMessageFoundUnsubscribe) onMessageFoundUnsubscribe();
-        if (onMessageLostUnsubscribe) onMessageLostUnsubscribe();
-        unsubscribe();
-    };
+  await GoogleNearbyMessages.subscribe();
+  const onMessageFoundUnsubscribe = onMessageFound ? onEvent('MESSAGE_FOUND', onMessageFound) : undefined;
+  const onMessageLostUnsubscribe = onMessageLost ? onEvent('MESSAGE_LOST', onMessageLost) : undefined;
+  return () => {
+    if (onMessageFoundUnsubscribe) onMessageFoundUnsubscribe();
+    if (onMessageLostUnsubscribe) onMessageLostUnsubscribe();
+    unsubscribe();
+  };
 }
 
 /**
  * Unsubscribe the current subscription.
  */
 export function unsubscribe(): void {
-    GoogleNearbyMessages.unsubscribe();
+  GoogleNearbyMessages.unsubscribe();
 }
 
 /**
@@ -76,15 +76,15 @@ export function unsubscribe(): void {
  * unpublish();
  */
 export async function publish(message: string): Promise<() => void> {
-    await GoogleNearbyMessages.publish(message);
-    return () => unpublish();
+  await GoogleNearbyMessages.publish(message);
+  return () => unpublish();
 }
 
 /**
  * Stop publishing the last message. Can only call after @see publish has been called.
  */
 export function unpublish(): void {
-    GoogleNearbyMessages.unpublish();
+  GoogleNearbyMessages.unpublish();
 }
 
 /**
@@ -95,7 +95,7 @@ export function unpublish(): void {
  * **On iOS**, this function checks if the User has given Bluetooth Permission using the CoreBluetooth API (`CBManager.authorization`). If not yet asked, a "grant permission?" dialog will pop up.
  */
 export function checkBluetoothPermission(): Promise<boolean> {
-    return GoogleNearbyMessages.checkBluetoothPermission();
+  return GoogleNearbyMessages.checkBluetoothPermission();
 }
 
 /**
@@ -106,7 +106,7 @@ export function checkBluetoothPermission(): Promise<boolean> {
  * **On iOS**, this function powers on the `CBCentralManager` and returns `true` if it was successfully turned on. If no callback was sent within `10` seconds, a timeout error will be thrown.
  */
 export function checkBluetoothAvailability(): Promise<boolean> {
-    return GoogleNearbyMessages.checkBluetoothAvailability();
+  return GoogleNearbyMessages.checkBluetoothAvailability();
 }
 
 /**
@@ -114,24 +114,24 @@ export function checkBluetoothAvailability(): Promise<boolean> {
  * @param callback The function to call when an error occurs. `kind` is the Error Type. e.g.: User turns Bluetooth off, callback gets called with ('BLUETOOTH_ERROR', true). When the User turns Bluetooth back on, callback gets called again with ('BLUETOOTH_ERROR', false).
  */
 export function addOnErrorListener(callback: (kind: ErrorType, message?: string) => void): () => void {
-    const bluetoothErrorUnsubscribe = onErrorEvent('BLUETOOTH_ERROR', (m) => callback('BLUETOOTH_ERROR', m));
-    const permissionErrorUnsubscribe = onErrorEvent('PERMISSION_ERROR', (m) => callback('PERMISSION_ERROR', m));
-    const messageNoDataErrorUnsubscribe = onErrorEvent('MESSAGE_NO_DATA_ERROR', (m) => callback('MESSAGE_NO_DATA_ERROR', m));
-    return () => {
-        bluetoothErrorUnsubscribe();
-        permissionErrorUnsubscribe();
-        messageNoDataErrorUnsubscribe();
-    };
+  const bluetoothErrorUnsubscribe = onErrorEvent('BLUETOOTH_ERROR', (m) => callback('BLUETOOTH_ERROR', m));
+  const permissionErrorUnsubscribe = onErrorEvent('PERMISSION_ERROR', (m) => callback('PERMISSION_ERROR', m));
+  const messageNoDataErrorUnsubscribe = onErrorEvent('MESSAGE_NO_DATA_ERROR', (m) => callback('MESSAGE_NO_DATA_ERROR', m));
+  return () => {
+    bluetoothErrorUnsubscribe();
+    permissionErrorUnsubscribe();
+    messageNoDataErrorUnsubscribe();
+  };
 }
 
 function onEvent(event: EventType, callback: (message?: string) => void): () => void {
-    const subscription = nearbyEventEmitter.addListener(event, (data: BridgeMessageEvent) => callback(data.message));
-    return () => subscription.remove();
+  const subscription = nearbyEventEmitter.addListener(event, (data: BridgeMessageEvent) => callback(data.message));
+  return () => subscription.remove();
 }
 
 function onErrorEvent(event: ErrorType, callback: (message?: string) => void): () => void {
-    const subscription = nearbyEventEmitter.addListener(event, (data: BridgeErrorEvent) => callback(data.message));
-    return () => subscription.remove();
+  const subscription = nearbyEventEmitter.addListener(event, (data: BridgeErrorEvent) => callback(data.message));
+  return () => subscription.remove();
 }
 
 
@@ -156,7 +156,10 @@ export function usePublication(apiKey: string, message: string) {
     };
 
     start();
-    return () => disconnect();
+    return () => {
+      unpublish();
+      disconnect();
+    };
   }, [apiKey, message]);
 }
 
@@ -182,7 +185,10 @@ export function usePublicationWithState(apiKey: string, message: string): Nearby
     };
 
     start();
-    return () => disconnect();
+    return () => {
+      unpublish();
+      disconnect();
+    };
   }, [setNearbyState, apiKey, message]);
 
   return nearbyState;
@@ -197,8 +203,11 @@ export function useSubscription(apiKey: string): string[] {
   const [nearbyMessages, setNearbyMessages] = useState<string[]>([]);
 
   const messageFound = useCallback((message) => {
-    nearbyMessages.push(message);
-    setNearbyMessages(nearbyMessages);
+    // avoid duplicates
+    if (nearbyMessages.findIndex(m => m === message) === -1) {
+      nearbyMessages.push(message);
+      setNearbyMessages(nearbyMessages);
+    }
   }, [nearbyMessages, setNearbyMessages]);
   const messageLost = useCallback((message) => {
     const index = nearbyMessages.findIndex((m) => m === message);
@@ -215,7 +224,10 @@ export function useSubscription(apiKey: string): string[] {
     };
 
     start();
-    return () => disconnect();
+    return () => {
+      unpublish();
+      disconnect();
+    };
   }, [apiKey, messageFound, messageLost]);
 
   return nearbyMessages;
@@ -244,7 +256,10 @@ export function useNearbySearch(apiKey: string, searchFor: string): boolean {
     };
 
     start();
-    return () => disconnect();
+    return () => {
+      unsubscribe();
+      disconnect();
+    };
   }, [apiKey, messageFound, messageLost]);
 
   return isNearby;

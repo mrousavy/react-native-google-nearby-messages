@@ -125,37 +125,24 @@ const isBluetoothAvailable = await checkBluetoothAvailability();
 
 This library also provides react hooks for common use cases. In case you're not familiar with hooks, please read the [hooks documentation](https://reactjs.org/docs/hooks-intro.html). When the component unmounts, the hooks automatically stop publishing, subscribing, remove error listeners and disconnect for you. You can also look into the [hooks source code](https://github.com/mrousavy/react-native-google-nearby-messages/blob/master/index.ts#L140-L259) and tweak them for your use case.
 
-#### usePublication
-
-Publishes a message.
-
-```ts
-export default function App() {
-  usePublication(API_KEY, 'Hello from Nearby!');
-  // ...
-}
-```
-
-#### usePublicationWithState
+#### useNearbyPublication
 
 Publishes a message and returns a state which describes the Nearby API status.
 
 ```ts
 export default function App() {
-  const nearbyState = usePublicationWithState(API_KEY, 'Hello from Nearby!');
-
-  if (nearbyState === 'published') console.log('Nearby has published!');
+  const nearbyState = useNearbyPublication(API_KEY, 'Hello from Nearby!');
   // ...
 }
 ```
 
-#### useSubscription
+#### useNearbySubscription
 
 Subscribe to nearby messages and return a state for all messages in an array.
 
 ```tsx
 export default function App() {
-  const nearbyMessages = useSubscription(API_KEY);
+  const { nearbyMessages, nearbyState } = useNearbySubscription(API_KEY);
   return (
     <FlatList
       data={nearbyMessages}
@@ -171,7 +158,7 @@ Search for a specific message using nearby messages.
 
 ```tsx
 export default function App() {
-  const isNearby = useNearbySearch(API_KEY, 'iPhone 11');
+  const { isNearby, nearbyState } = useNearbySearch(API_KEY, 'iPhone 11');
   return (
     <Text>{isNearby ? 'iPhone 11 is nearby!' : 'iPhone 11 is far, far away.'}</Text>
   );

@@ -141,42 +141,48 @@ function onErrorEvent(event: ErrorType, callback: (message?: string) => void): (
 /**
  * The current state of the Google Nearby API (used in hooks)
  */
-export type NearbyState = 'connecting' | 'publishing' | 'published' | 'subscribing' | 'subscribed' | 'error';
-
+export type NearbyState = 'disconnected' | 'connecting' | 'published' | 'subscribed' | 'error' | 'denied' | 'unavailable';
 /**
- * Publish a simple message.
- * @param apiKey The Google API Key - required on iOS
- * @param message The message to publish
+ * The state of a current Subscription. (used in hooks)
  */
-export function usePublication(apiKey: string, message: string) {
-  useEffect(() => {
-    const start = async () => {
-      await connect(apiKey);
-      await publish(message);
-    };
-
-    start();
-    return () => {
-      unpublish();
-      disconnect();
-    };
-  }, [apiKey, message]);
+export interface SubscriptionState {
+  nearbyMessages: string[];
+  nearbyState: NearbyState;
+}
+/**
+ * The state of a current Subscription-Search. (used in hooks)
+ */
+export interface SearchState {
+  isNearby: boolean;
+  nearbyState: NearbyState;
 }
 
 /**
- * Publish a simple message and return the current state of the nearby API
+ * Publish a simple message and return the current state of the nearby API.
+ *
+ * Also calls `checkBluetoothAvailability()` and `checkBluetoothPermission()`.
  * @param apiKey The Google API Key - required on iOS
  * @param message The message to publish
  * @returns The current state of the Nearby API
  */
-export function usePublicationWithState(apiKey: string, message: string): NearbyState {
-  const [nearbyState, setNearbyState] = useState<NearbyState>('connecting')
+export function useNearbyPublication(apiKey: string, message: string): NearbyState {
+  const [nearbyState, setNearbyState] = useState<NearbyState>('connecting');
 
   useEffect(() => {
     const start = async () => {
       try {
+        const available = await checkBluetoothAvailability();
+        if (!available) {
+          setNearbyState('unavailable');
+          return;
+        }
+        const permission = await checkBluetoothPermission();
+        if (!permission) {
+          setNearbyState('denied');
+          return;
+        }
+
         await connect(apiKey);
-        setNearbyState('publishing');
         await publish(message);
         setNearbyState('published');
       } catch (e) {
@@ -188,19 +194,23 @@ export function usePublicationWithState(apiKey: string, message: string): Nearby
     return () => {
       unpublish();
       disconnect();
+      setNearbyState('disconnected');
     };
-  }, [setNearbyState, apiKey, message]);
+  }, [setNearbyState, apiKey, message, setNearbyState]);
 
   return nearbyState;
 }
 
 /**
- * Subscribe to nearby messages and return an array of all nearby messages.
+ * Subscribe to nearby messages and return an instance of the `SubscriptionState` object.
+ *
+ * Also calls `checkBluetoothAvailability()` and `checkBluetoothPermission()`.
  * @param apiKey The Google API Key - required on iOS
  * @returns A state of all nearby messages
  */
-export function useSubscription(apiKey: string): string[] {
+export function useNearbySubscription(apiKey: string): SubscriptionState {
   const [nearbyMessages, setNearbyMessages] = useState<string[]>([]);
+  const [nearbyState, setNearbyState] = useState<NearbyState>('connecting');
 
   const messageFound = useCallback((message) => {
     // avoid duplicates
@@ -219,28 +229,48 @@ export function useSubscription(apiKey: string): string[] {
 
   useEffect(() => {
     const start = async () => {
-      await connect(apiKey);
-      await subscribe(messageFound, messageLost)
+      try {
+        const available = await checkBluetoothAvailability();
+        if (!available) {
+          setNearbyState('unavailable');
+          return;
+        }
+        const permission = await checkBluetoothPermission();
+        if (!permission) {
+          setNearbyState('denied');
+          return;
+        }
+
+        await connect(apiKey);
+        await subscribe(messageFound, messageLost);
+        setNearbyState('subscribed');
+      } catch (e) {
+        setNearbyState('error');
+      }
     };
 
     start();
     return () => {
       unpublish();
       disconnect();
+      setNearbyState('disconnected');
     };
-  }, [apiKey, messageFound, messageLost]);
+  }, [apiKey, messageFound, messageLost, setNearbyState]);
 
-  return nearbyMessages;
+  return { nearbyMessages, nearbyState };
 }
 
 /**
  * Search for a specific message using the nearby messages API. Returns a state whether the message has been found or not.
+ *
+ * Also calls `checkBluetoothAvailability()` and `checkBluetoothPermission()`.
  * @param apiKey The Google API Key - required on iOS
  * @param searchFor The string to perform the nearby search for
  * @returns A state whether the message has been found or not.
  */
-export function useNearbySearch(apiKey: string, searchFor: string): boolean {
+export function useNearbySearch(apiKey: string, searchFor: string): SearchState {
   const [isNearby, setIsNearby] = useState(false);
+  const [nearbyState, setNearbyState] = useState<NearbyState>('connecting');
 
   const messageFound = useCallback((message) => {
     if (message === searchFor) setIsNearby(true);
@@ -251,18 +281,35 @@ export function useNearbySearch(apiKey: string, searchFor: string): boolean {
 
   useEffect(() => {
     const start = async () => {
-      await connect(apiKey);
-      await subscribe(messageFound, messageLost)
+      try {
+        const available = await checkBluetoothAvailability();
+        if (!available) {
+          setNearbyState('unavailable');
+          return;
+        }
+        const permission = await checkBluetoothPermission();
+        if (!permission) {
+          setNearbyState('denied');
+          return;
+        }
+
+        await connect(apiKey);
+        await subscribe(messageFound, messageLost);
+        setNearbyState('subscribed');
+      } catch (e) {
+        setNearbyState('error');
+      }
     };
 
     start();
     return () => {
       unsubscribe();
       disconnect();
+      setNearbyState('disconnected');
     };
-  }, [apiKey, messageFound, messageLost]);
+  }, [apiKey, messageFound, messageLost, setNearbyState]);
 
-  return isNearby;
+  return { isNearby, nearbyState };
 }
 
 /**

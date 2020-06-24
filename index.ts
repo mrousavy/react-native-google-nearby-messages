@@ -191,7 +191,12 @@ export function useNearbyPublication(apiKey: string, message: string): NearbySta
     };
 
     start();
+    const removeListener = addOnErrorListener((kind, message) => {
+      console.log(`[NEARBY] Error: ${kind}: ${message}`);
+      setNearbyState('error');
+    });
     return () => {
+      removeListener();
       unpublish();
       disconnect();
       setNearbyState('disconnected');
@@ -250,7 +255,12 @@ export function useNearbySubscription(apiKey: string): SubscriptionState {
     };
 
     start();
+    const removeListener = addOnErrorListener((kind, message) => {
+      console.log(`[NEARBY] Error: ${kind}: ${message}`);
+      setNearbyState('error');
+    });
     return () => {
+      removeListener();
       unpublish();
       disconnect();
       setNearbyState('disconnected');
@@ -302,7 +312,12 @@ export function useNearbySearch(apiKey: string, searchFor: string): SearchState 
     };
 
     start();
+    const removeListener = addOnErrorListener((kind, message) => {
+      console.log(`[NEARBY] Error: ${kind}: ${message}`);
+      setNearbyState('error');
+    });
     return () => {
+      removeListener();
       unsubscribe();
       disconnect();
       setNearbyState('disconnected');

@@ -78,12 +78,15 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    _connect();
+    const start = async () => {
+      await _connect();
 
-    _checkPermissions();
-    _subscribe();
-    _publish();
+      await _checkPermissions();
+      await _subscribe();
+      await _publish();
+    };
 
+    start();
     return () => disconnect();
   }, [_connect, _subscribe, _publish, _checkPermissions]);
 

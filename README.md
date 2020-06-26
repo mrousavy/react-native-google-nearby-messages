@@ -48,6 +48,7 @@ See the [example app](example/).
         package="com.google.sample.app" >
         <uses-permission android:name="android.permission.BLUETOOTH" />
         <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+        <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
         <application ...>
             <meta-data
@@ -69,7 +70,7 @@ See the [example app](example/).
 import { connect, publish, addOnErrorListener } from 'react-native-google-nearby-messages';
 
 const removeListener = addOnErrorListener((kind, message) => console.error(`${kind}: ${message}`));
-const disconnect = await connect('<youriOSAPIkey>');
+const disconnect = await connect({ apiKey: GOOGLE_API_KEY });
 const unpublish = await publish('hello !');
 
 // later, e.g. in componentWillUnmount()
@@ -86,7 +87,7 @@ disconnect();
 import { connect, subscribe, addOnErrorListener } from 'react-native-google-nearby-messages';
 
 const removeListener = addOnErrorListener((kind, message) => console.error(`${kind}: ${message}`));
-const disconnect = await connect('<youriOSAPIkey>');
+const disconnect = await connect({ apiKey: GOOGLE_API_KEY });
 const unsubscribe = await subscribe(
   (m) => {
     console.log(`new message found: ${m}`);
@@ -127,22 +128,22 @@ This library also provides react hooks for common use cases. In case you're not 
 
 #### useNearbyPublication
 
-Publishes a message and returns a state which describes the Nearby API status.
+Publishes a message and returns a state which describes the Nearby API status. (e.g.: `connecting`, `published`, `error`, ...)
 
 ```ts
 export default function App() {
-  const nearbyState = useNearbyPublication(API_KEY, 'Hello from Nearby!');
+  const nearbyStatus = useNearbyPublication({ apiKey: GOOGLE_API_KEY }, 'Hello from Nearby!');
   // ...
 }
 ```
 
 #### useNearbySubscription
 
-Subscribe to nearby messages and return a state for all messages in an array.
+Subscribe to nearby messages and return a state for all messages in an array, as well as a state describing the Nearby API Status. (e.g.: `connecting`, `published`, `error`, ...)
 
 ```tsx
 export default function App() {
-  const { nearbyMessages, nearbyState } = useNearbySubscription(API_KEY);
+  const { nearbyMessages, nearbyStatus } = useNearbySubscription({ apiKey: GOOGLE_API_KEY });
   return (
     <FlatList
       data={nearbyMessages}
@@ -154,11 +155,11 @@ export default function App() {
 
 #### useNearbySearch
 
-Search for a specific message using nearby messages.
+Search for a specific message using nearby messages. The `isNearby` local specifies whether the string `iPhone 11` could be found using the Nearby API, and the `nearbyStatus` local describes the current status of the Nearby API. (e.g.: `connecting`, `published`, `error`, ...)
 
 ```tsx
 export default function App() {
-  const { isNearby, nearbyState } = useNearbySearch(API_KEY, 'iPhone 11');
+  const { isNearby, nearbyStatus } = useNearbySearch({ apiKey: GOOGLE_API_KEY }, 'iPhone 11');
   return (
     <Text>{isNearby ? 'iPhone 11 is nearby!' : 'iPhone 11 is far, far away.'}</Text>
   );
@@ -167,7 +168,7 @@ export default function App() {
 
 #### useNearbyErrorCallback
 
-Subscribe to any errors occuring in the Nearby API.
+Subscribe to any errors emitted from the Nearby API.
 
 ```ts
 export default function App() {

@@ -100,7 +100,7 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
                     }
                 }).build()
         _isSubscribed = false
-        Log.d(name, "GNM_BLE: Connected with discoveryMediums (zze) $mediums and discoveryModes $modes!")
+        Log.d(name, "GNM_BLE: Connected with discoveryMediums $mediums, permissions $permissions and discoveryModes $modes!")
         promise.resolve(null)
     }
 

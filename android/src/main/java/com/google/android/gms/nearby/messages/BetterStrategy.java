@@ -17,9 +17,9 @@ import javax.annotation.concurrent.Immutable;
         creator = "StrategyCreator"
 )
 public class BetterStrategy {
+    public static final int DISCOVERY_MEDIUM_DEFAULT = -1;
     public static final int DISCOVERY_MEDIUM_BLE = 2;
     public static final int DISCOVERY_MEDIUM_AUDIO = 4;
-    public static final int DISCOVERY_MEDIUM_DEFAULT = -1;
 
     public static class Builder {
         private int discoveryMode = Strategy.DISCOVERY_MODE_DEFAULT;
@@ -38,11 +38,6 @@ public class BetterStrategy {
 
         public BetterStrategy.Builder setDiscoveryMedium(int var1) {
             this.discoveryMedium = var1;
-            return this;
-        }
-
-        public final BetterStrategy.Builder zze(int var1) {
-            this.discoveryMedium = 2;
             return this;
         }
 

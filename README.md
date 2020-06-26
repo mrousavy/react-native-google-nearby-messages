@@ -33,7 +33,7 @@ See the [example app](example/).
 
 > See: https://developers.google.com/nearby/messages/ios/get-started
 
-1. Add bluetooth permissions (`NSBluetoothPeripheralUsageDescription`, `NSBluetoothAlwaysUsageDescription`) to `Info.plist`
+1. Add bluetooth permissions (`NSBluetoothPeripheralUsageDescription`, `NSBluetoothAlwaysUsageDescription` for 'ble', and `NSMicrophoneUsageDescription` for 'audio') to `Info.plist`
 2. Create your API Key at [the Google Developer Console](https://console.developers.google.com/flows/enableapi?apiid=copresence&keyType=CLIENT_SIDE_IOS&reusekey=true).
 3. (Optionally): Add the [react-native-permissions](https://github.com/react-native-community/react-native-permissions) library to check if Bluetooth is available on the device (it's `'unavailable'` on iOS Simulators!) If it's `'unavailable'`, calls to subscribe or publish might crash the app (`EXC_BAD_ACCESS`) so only call if Bluetooth permission is `denied`, `granted` or `blocked`. This library will handle the permission checking for you when you call `publish()` or `subscribe()` for the first time.
 4. Pass the generated API Key as a parameter using the `connect` function
@@ -48,9 +48,13 @@ See the [example app](example/).
     ```xml
     <manifest xmlns:android="http://schemas.android.com/apk/res/android"
         package="com.google.sample.app" >
+        <!-- For BLE/Bluetooth -->
         <uses-permission android:name="android.permission.BLUETOOTH" />
         <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
         <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+        <!-- For Audio -->
+        <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
         <application ...>
             <meta-data

@@ -36,14 +36,10 @@ export type DiscoveryMode = 'broadcast' | 'scan';
  *
  *
  * Use both (`['ble', 'audio']`) to combine bluetooth and audio.
+ *
+ * Note that on Android the values `'bluetooth'`, `'none'` and `'default'` are also accepted, but aren't guaranteed to work.
  */
 export type DiscoveryMedium = 'ble' | 'audio';
-/**
- * Extra Discovery-Medium-Permissions for the publish and subscribe API (only supported on Android)
- *
- * @platform Android
- */
-export type DiscoveryMediumAndroid = 'bluetooth' | 'default' | 'none';
 
 /**
  * The config used for the Nearby API connect function.
@@ -59,8 +55,10 @@ export interface NearbyConfig {
   discoveryModes?: DiscoveryMode[];
   /**
    * _(optional)_ The mediums used for publishing and subscribing. When `undefined`, the default discovery mediums are used. (`['ble']`)
+   *
+   * Note that on Android the values `'bluetooth'`, `'none'` and `'default'` are also accepted, but aren't guaranteed to work.
    */
-  discoveryMediums?: (DiscoveryMedium | DiscoveryMediumAndroid)[];
+  discoveryMediums?: DiscoveryMedium[];
 }
 
 interface BridgeMessageEvent {

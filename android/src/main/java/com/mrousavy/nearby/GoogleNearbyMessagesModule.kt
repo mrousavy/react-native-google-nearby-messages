@@ -339,11 +339,11 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
         for (medium in list) {
             val mediumLower = medium.toString().toLowerCase(Locale.ROOT)
             when (mediumLower) {
-                "ble" -> discoveryMedium = discoveryMedium or 2
-                "audio" ->  discoveryMedium = discoveryMedium or 4
-                // only supported on android
+                "ble" -> discoveryMedium = discoveryMedium or BetterStrategy.DISCOVERY_MEDIUM_BLE
+                "audio" ->  discoveryMedium = discoveryMedium or BetterStrategy.DISCOVERY_MEDIUM_AUDIO
+                // only supported on android, these are not tested!!
                 "bluetooth" -> discoveryMedium = discoveryMedium or NearbyPermissions.BLUETOOTH
-                "default" ->  discoveryMedium = discoveryMedium or NearbyPermissions.DEFAULT
+                "default" ->  discoveryMedium = discoveryMedium or BetterStrategy.DISCOVERY_MEDIUM_DEFAULT
                 "none" ->  discoveryMedium = discoveryMedium or NearbyPermissions.NONE
             }
         }

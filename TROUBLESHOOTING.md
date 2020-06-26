@@ -48,6 +48,5 @@ The library isn't battle-tested for each scenario, so make sure you're aware of 
       end
     end
     ```
-    > Thanks [@zaptrem](https://github.com/zaptrem)
 
 If you're still having problems, [create an issue](https://github.com/mrousavy/react-native-google-nearby-messages/issues).

@@ -78,7 +78,7 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
         val mediums = parseDiscoveryMediums(discoveryMediums)
         val modes = parseDiscoveryModes(discoveryModes)
         _subscribeOptions = SubscribeOptions.Builder()
-                .setStrategy(Strategy.Builder().zze(mediums).setDiscoveryMode(modes).setTtlSeconds(Strategy.TTL_SECONDS_INFINITE).build())
+                .setStrategy(BetterStrategy.Builder().setDiscoveryMedium(mediums).setDiscoveryMode(modes).setTtlSeconds(Strategy.TTL_SECONDS_INFINITE).build())
                 .setCallback(object : SubscribeCallback() {
                     override fun onExpired() {
                         super.onExpired()
@@ -88,7 +88,7 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
                     }
                 }).build()
         _publishOptions = PublishOptions.Builder()
-                .setStrategy(Strategy.Builder().zze(mediums).setDiscoveryMode(modes).setTtlSeconds(Strategy.TTL_SECONDS_MAX).build())
+                .setStrategy(BetterStrategy.Builder().setDiscoveryMedium(mediums).setDiscoveryMode(modes).setTtlSeconds(Strategy.TTL_SECONDS_MAX).build())
                 .setCallback(object : PublishCallback() {
                     override fun onExpired() {
                         super.onExpired()
@@ -339,8 +339,8 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
         for (medium in list) {
             val mediumLower = medium.toString().toLowerCase(Locale.ROOT)
             when (mediumLower) {
-                "ble" -> discoveryMedium = discoveryMedium or NearbyPermissions.BLE
-                "audio" ->  discoveryMedium = discoveryMedium or NearbyPermissions.MICROPHONE
+                "ble" -> discoveryMedium = discoveryMedium or 2
+                "audio" ->  discoveryMedium = discoveryMedium or 4
                 // only supported on android
                 "bluetooth" -> discoveryMedium = discoveryMedium or NearbyPermissions.BLUETOOTH
                 "default" ->  discoveryMedium = discoveryMedium or NearbyPermissions.DEFAULT

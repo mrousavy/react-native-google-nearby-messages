@@ -3,7 +3,9 @@
   <h2 align="center">react-native-google-nearby-messages</h2>
 </p>
 
-An async **Google Nearby Messages** API Wrapper for **React Native** (Android & iOS), using the newest API Version (`17`). Also, this is a good example on how to use _Swift_ in a React Native Native Module.
+An async **Google Nearby Messages** API Wrapper for **React Native** (Android & iOS), supporting autolinking, custom discovery modes (`broadcast`, `scan`, ..), custom discovery mediums (`bluetooth`, `audio`, ..), awaitable native invokations and React hooks!
+
+> Also, this is a good example on how to use _Swift_ in a React Native - Native Module.
 
 [![react-native-google-nearby-messages](https://badge.fury.io/js/react-native-google-nearby-messages.svg)](https://badge.fury.io/js/react-native-google-nearby-messages)
 [![GitHub stars](https://img.shields.io/github/stars/mrousavy/react-native-google-nearby-messages.svg?style=social&label=Star&maxAge=259000)](https://GitHub.com/mrousavy/react-native-google-nearby-messages/stargazers/)
@@ -21,7 +23,7 @@ npm i react-native-google-nearby-messages
 cd ios && pod install && cd ..
 ```
 
-> Note (iOS): Everytime you run `pod install` an entry called `Assets.car` is created in your **Build Phases** -> **[CP] Copy Pods Resources** which causes the build to fail. This is a known bug in the Google **NearbyMessages** pod. A workaround is to manually remove this file everytime you run `pod install`. I've tried creating a `post_install` hook for the Podfile, but I haven't got it working. Please [create a PR here](https://github.com/mrousavy/react-native-google-nearby-messages/pulls) if you found a fix for this!
+> Note (iOS): Everytime you run `pod install` an entry called `Assets.car` is created in your **Build Phases** -> **[CP] Copy Pods Resources** which causes the build to fail. This is a known bug in the Google **NearbyMessages** pod. A workaround is to manually remove this file everytime you run `pod install`. See [#4 (comment)](https://github.com/mrousavy/react-native-google-nearby-messages/issues/4#issuecomment-649961499) for an automatic fix. Please [create a PR here](https://github.com/mrousavy/react-native-google-nearby-messages/pulls) if you found a better solution for this!
 
 ## Usage
 

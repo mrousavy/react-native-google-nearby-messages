@@ -9,6 +9,9 @@
 import Foundation
 import CoreBluetooth
 
+let defaultDiscoveryModes: GNSDiscoveryMode = [.broadcast, .scan]
+let defaultDiscoveryMediums: GNSDiscoveryMediums = .BLE
+
 @objc(NearbyMessages)
 class NearbyMessages: RCTEventEmitter {
 	enum EventType: String, CaseIterable {
@@ -36,16 +39,19 @@ class NearbyMessages: RCTEventEmitter {
 	private var messageManager: GNSMessageManager? = nil
 	private var currentPublication: GNSPublication? = nil
 	private var currentSubscription: GNSSubscription? = nil
+	private var discoveryModes: GNSDiscoveryMode? = nil
+	private var discoveryMediums: GNSDiscoveryMediums? = nil
 	// workaround objects for checkBluetoothAvailability
 	private var tempBluetoothManager: CBCentralManager? = nil
 	private var tempBluetoothManagerDelegate: CBCentralManagerDelegate? = nil
 	private var didCallback = false
 
-	@objc(connect:resolver:rejecter:)
-	func connect(_ apiKey: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
+	@objc(connect:discoveryModes:discoveryMediums:resolver:rejecter:)
+	func connect(_ apiKey: String, discoveryModes: Array<NSString>, discoveryMediums: Array<NSString>, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
 		print("GNM_BLE: Connecting...")
 		//GNSMessageManager.setDebugLoggingEnabled(true)
-
+		self.discoveryMediums = parseDiscoveryMediums(discoveryMediums)
+		self.discoveryModes = parseDiscoveryModes(discoveryModes)
 		self.messageManager = GNSMessageManager(apiKey: apiKey,
 												paramsBlock: { (params: GNSMessageManagerParams?) in
 													guard let params = params else { return }
@@ -64,6 +70,7 @@ class NearbyMessages: RCTEventEmitter {
 															self.sendEvent(withName: EventType.PERMISSION_ERROR.rawValue, body: [ "message": "Bluetooth Permission denied!" ])
 														}
 													}
+													
 
 		})
 		resolve(nil)
@@ -90,9 +97,8 @@ class NearbyMessages: RCTEventEmitter {
 					guard let params = params else { return }
 					params.strategy = GNSStrategy(paramsBlock: { (params: GNSStrategyParams?) in
 						guard let params = params else { return }
-						params.discoveryMediums = .BLE
-						//params.discoveryMode = .broadcast
-
+						params.discoveryMediums = self.discoveryMediums ?? defaultDiscoveryMediums
+						params.discoveryMode = self.discoveryModes ?? defaultDiscoveryModes
 					})
 			})
 			resolve(nil)
@@ -135,8 +141,8 @@ class NearbyMessages: RCTEventEmitter {
 				  guard let params = params else { return }
 				  params.strategy = GNSStrategy(paramsBlock: { (params: GNSStrategyParams?) in
 					guard let params = params else { return }
-					params.discoveryMediums = .BLE
-					//params.discoveryMode = .scan
+					params.discoveryMediums = self.discoveryMediums ?? defaultDiscoveryMediums
+					params.discoveryMode = self.discoveryModes ?? defaultDiscoveryModes
 				  })
 				})
 			resolve(nil)
@@ -228,5 +234,42 @@ class NearbyMessages: RCTEventEmitter {
 	func invalidate() {
 		print("GNM_BLE: invalidate")
 		disconnect()
+	}
+	
+	func parseDiscoveryMediums(_ discoveryMediums: Array<NSString>) -> GNSDiscoveryMediums {
+		var mediums = GNSDiscoveryMediums()
+		for medium in discoveryMediums {
+			let mediumLower = medium.lowercased
+			switch (mediumLower) {
+			case "ble":
+				mediums.insert(.BLE)
+				break
+			case "audio":
+				mediums.insert(.audio)
+				break
+			default:
+				break
+			}
+		}
+		return mediums.isEmpty ? defaultDiscoveryMediums : mediums
+	}
+	
+	
+	func parseDiscoveryModes(_ discoveryModes: Array<NSString>) -> GNSDiscoveryMode {
+		var modes = GNSDiscoveryMode()
+		for mode in discoveryModes {
+			let modeLower = mode.lowercased
+			switch (modeLower) {
+			case "broadcast":
+				modes.insert(.broadcast)
+				break
+			case "scan":
+				modes.insert(.scan)
+				break
+			default:
+				break
+			}
+		}
+		return modes.isEmpty ? defaultDiscoveryModes : modes
 	}
 }

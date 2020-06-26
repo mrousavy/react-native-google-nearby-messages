@@ -17,7 +17,8 @@ import com.google.android.gms.nearby.messages.*
 import java.util.*
 
 val defaultDiscoveryModes = Strategy.DISCOVERY_MODE_BROADCAST or Strategy.DISCOVERY_MODE_SCAN
-val defaultDiscoveryMediums = NearbyPermissions.BLE
+val defaultDiscoveryMediums = BetterStrategy.DISCOVERY_MEDIUM_BLE
+val defaultPermissions = NearbyPermissions.DEFAULT
 
 class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext), LifecycleEventListener {
     private enum class EventType(private val _type: String) {
@@ -68,15 +69,16 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
                 this.onLost(message)
             }
         }
-        _messagesClient = Nearby.getMessagesClient(context!!, MessagesOptions.Builder().setPermissions(NearbyPermissions.BLE).build())
+        val mediums = parseDiscoveryMediums(discoveryMediums)
+        val modes = parseDiscoveryModes(discoveryModes)
+        val permissions = parsePermissionOptions(discoveryMediums)
+        _messagesClient = Nearby.getMessagesClient(context!!, MessagesOptions.Builder().setPermissions(permissions).build())
         _messagesClient!!.registerStatusCallback(object : StatusCallback() {
             override fun onPermissionChanged(permissionGranted: Boolean) {
                 super.onPermissionChanged(permissionGranted)
                 if (!permissionGranted) emitErrorEvent(EventType.PERMISSION_ERROR, "Bluetooth Permission denied!")
             }
         })
-        val mediums = parseDiscoveryMediums(discoveryMediums)
-        val modes = parseDiscoveryModes(discoveryModes)
         _subscribeOptions = SubscribeOptions.Builder()
                 .setStrategy(BetterStrategy.Builder().setDiscoveryMedium(mediums).setDiscoveryMode(modes).setTtlSeconds(Strategy.TTL_SECONDS_INFINITE).build())
                 .setCallback(object : SubscribeCallback() {
@@ -348,6 +350,25 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
             }
         }
         return discoveryMedium
+    }
+
+    private fun parsePermissionOptions(discoveryMediums: ReadableArray): Int {
+        var permissions = 0
+        val list = discoveryMediums.toArrayList()
+        if (list.size == 0) return defaultPermissions
+
+        for (medium in list) {
+            val mediumLower = medium.toString().toLowerCase(Locale.ROOT)
+            when (mediumLower) {
+                "ble" -> permissions = permissions or NearbyPermissions.BLE
+                "audio" ->  permissions = permissions or NearbyPermissions.MICROPHONE
+                // only supported on android, these are not tested!!
+                "bluetooth" -> permissions = permissions or NearbyPermissions.BLUETOOTH
+                "default" ->  permissions = permissions or NearbyPermissions.DEFAULT
+                "none" ->  permissions = permissions or NearbyPermissions.NONE
+            }
+        }
+        return permissions
     }
 
     // React Native Event Emitters

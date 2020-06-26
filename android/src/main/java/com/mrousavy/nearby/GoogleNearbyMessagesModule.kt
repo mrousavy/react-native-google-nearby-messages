@@ -14,7 +14,10 @@ import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.messages.*
+import java.util.*
 
+val defaultDiscoveryModes = Strategy.DISCOVERY_MODE_BROADCAST or Strategy.DISCOVERY_MODE_SCAN
+val defaultDiscoveryMediums = NearbyPermissions.BLE
 
 class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext), LifecycleEventListener {
     private enum class EventType(private val _type: String) {
@@ -42,7 +45,7 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
 
 
     @ReactMethod
-    fun connect(apiKey: String?, promise: Promise) {
+    fun connect(discoveryModes: ReadableArray, discoveryMediums: ReadableArray, promise: Promise) {
         Log.d(name, "GNM_BLE: Connecting...")
         if (!isMinimumAndroidVersion) {
             promise.reject(Exception("UNSUPPORTED_ERROR: Current Android version is too low: ${Build.VERSION.SDK_INT}"))
@@ -65,7 +68,6 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
                 this.onLost(message)
             }
         }
-        val context = context
         _messagesClient = Nearby.getMessagesClient(context!!, MessagesOptions.Builder().setPermissions(NearbyPermissions.BLE).build())
         _messagesClient!!.registerStatusCallback(object : StatusCallback() {
             override fun onPermissionChanged(permissionGranted: Boolean) {
@@ -73,8 +75,10 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
                 if (!permissionGranted) emitErrorEvent(EventType.PERMISSION_ERROR, "Bluetooth Permission denied!")
             }
         })
+        val mediums = parseDiscoveryMediums(discoveryMediums)
+        val modes = parseDiscoveryModes(discoveryModes)
         _subscribeOptions = SubscribeOptions.Builder()
-                .setStrategy(Strategy.Builder().zze(NearbyPermissions.BLE).setTtlSeconds(Strategy.TTL_SECONDS_INFINITE).build())
+                .setStrategy(Strategy.Builder().zze(mediums).setDiscoveryMode(modes).setTtlSeconds(Strategy.TTL_SECONDS_INFINITE).build())
                 .setCallback(object : SubscribeCallback() {
                     override fun onExpired() {
                         super.onExpired()
@@ -84,7 +88,7 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
                     }
                 }).build()
         _publishOptions = PublishOptions.Builder()
-                .setStrategy(Strategy.Builder().zze(NearbyPermissions.BLE).setTtlSeconds(Strategy.TTL_SECONDS_MAX).build())
+                .setStrategy(Strategy.Builder().zze(mediums).setDiscoveryMode(modes).setTtlSeconds(Strategy.TTL_SECONDS_MAX).build())
                 .setCallback(object : PublishCallback() {
                     override fun onExpired() {
                         super.onExpired()
@@ -94,7 +98,7 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
                     }
                 }).build()
         _isSubscribed = false
-        Log.d(name, "GNM_BLE: Connected!")
+        Log.d(name, "GNM_BLE: Connected with discoveryMediums (zze) $mediums and discoveryModes $modes!")
         promise.resolve(null)
     }
 
@@ -308,6 +312,42 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
             2801 -> "TOO_MANY_PENDING_INTENTS"
             else -> "UNKNOWN_ERROR"
         }
+    }
+
+    private fun parseDiscoveryModes(discoveryModes: ReadableArray): Int {
+        var discoveryMode = 0
+        val list = discoveryModes.toArrayList()
+        if (list.size == 0) return defaultDiscoveryModes
+
+        for (mode in list) {
+            val modeLower = mode.toString().toLowerCase(Locale.ROOT)
+            when (modeLower) {
+                "broadcast" -> discoveryMode = discoveryMode or Strategy.DISCOVERY_MODE_BROADCAST
+                "scan" -> discoveryMode = discoveryMode or Strategy.DISCOVERY_MODE_SCAN
+            }
+        }
+        return discoveryMode
+    }
+
+    // TODO: I don't know if that's parsing the right values. There are no docs for this.
+    // TODO: Strategy.java has zze() which maps BLE-only to 2. But are the other ones correct? Ultrasound is 4, here it is 6??
+    private fun parseDiscoveryMediums(discoveryMediums: ReadableArray): Int {
+        var discoveryMedium = 0
+        val list = discoveryMediums.toArrayList()
+        if (list.size == 0) return defaultDiscoveryMediums
+
+        for (medium in list) {
+            val mediumLower = medium.toString().toLowerCase(Locale.ROOT)
+            when (mediumLower) {
+                "ble" -> discoveryMedium = discoveryMedium or NearbyPermissions.BLE
+                "audio" ->  discoveryMedium = discoveryMedium or NearbyPermissions.MICROPHONE
+                // only supported on android
+                "bluetooth" -> discoveryMedium = discoveryMedium or NearbyPermissions.BLUETOOTH
+                "default" ->  discoveryMedium = discoveryMedium or NearbyPermissions.DEFAULT
+                "none" ->  discoveryMedium = discoveryMedium or NearbyPermissions.NONE
+            }
+        }
+        return discoveryMedium
     }
 
     // React Native Event Emitters

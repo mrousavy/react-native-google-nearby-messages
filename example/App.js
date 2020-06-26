@@ -8,13 +8,7 @@
  * https://github.com/facebook/react-native
  */
 
-import React, {
-  Component,
-  useState,
-  useCallback,
-  useEffect,
-  useMemo,
-} from 'react';
+import React, {useState, useCallback, useEffect} from 'react';
 import {StyleSheet, Text, View, Alert} from 'react-native';
 import {
   connect,
@@ -42,7 +36,7 @@ export default function App() {
     console.log('Connecting...');
     await connect({
       apiKey: API_KEY,
-      discoveryModes: ['broadcast'],
+      discoveryModes: ['broadcast', 'scan'],
       discoveryMediums: ['ble'],
     });
     console.log('Connected!');

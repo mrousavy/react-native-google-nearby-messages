@@ -50,13 +50,17 @@ export interface NearbyConfig {
    */
   apiKey?: string;
   /**
-   * _(optional)_ The modes used for discovering nearby devices (e.g.: Bluetooth Pairing codes). When `undefined`, the default discovery modes are used. (`['broadcast', 'scan']`)
+   * _(optional)_ The modes used for discovering nearby devices (e.g.: Bluetooth Pairing codes). When `undefined`, the default discovery modes are used.
+   *
+   * @default ['broadcast', 'scan']
    */
   discoveryModes?: DiscoveryMode[];
   /**
-   * _(optional)_ The mediums used for publishing and subscribing. When `undefined`, the default discovery mediums are used. (`['ble']`)
+   * _(optional)_ The mediums used for publishing and subscribing. When `undefined`, the default discovery mediums are used.
    *
    * Note that on Android the values `'bluetooth'`, `'none'` and `'default'` are also accepted, but aren't guaranteed to work.
+   *
+   * @default ['ble']
    */
   discoveryMediums?: DiscoveryMedium[];
 }

@@ -8,7 +8,13 @@
  * https://github.com/facebook/react-native
  */
 
-import React, {Component} from 'react';
+import React, {
+  Component,
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+} from 'react';
 import {StyleSheet, Text, View, Alert} from 'react-native';
 import {
   connect,
@@ -16,116 +22,79 @@ import {
   subscribe,
   checkBluetoothPermission,
   checkBluetoothAvailability,
-  addOnErrorListener,
+  useNearbyErrorCallback,
+  disconnect,
 } from 'react-native-google-nearby-messages';
+import {getDeviceName} from 'react-native-device-info';
 
 const API_KEY = '<yourapikey>';
 
-export default class App extends Component {
-  state = {
-    status: 'starting',
-    message: '--',
-  };
-  listeners = [];
+export default function App() {
+  const [nearbyStatus, setNearbyStatus] = useState('connecting');
+  const [nearbyMessage, setNearbyMessage] = useState('');
+  const deviceName = useMemo(() => getDeviceName(), []);
 
-  componentDidMount() {
-    this.listeners.push(
-      addOnErrorListener((k, m) => {
-        console.error(`${k}: ${m}`);
-        Alert.alert('Error!', `${k}: ${m}`);
-      }),
+  useNearbyErrorCallback(
+    useCallback((kind, message) => {
+      Alert.alert(kind, message);
+    }, []),
+  );
+
+  const _connect = useCallback(async () => {
+    console.log('Connecting...');
+    await connect({
+      apiKey: API_KEY,
+      discoveryModes: ['broadcast'],
+      discoveryMediums: ['ble'],
+    });
+    console.log('Connected!');
+    return () => disconnect();
+  }, []);
+  const _publish = useCallback(async () => {
+    console.log(`Publishing "${deviceName}"...`);
+    await publish(deviceName);
+    console.log(`Published "${deviceName}"!`);
+  }, [deviceName]);
+  const _subscribe = useCallback(async () => {
+    console.log('Subscribing...');
+    await subscribe(
+      (m) => {
+        setNearbyMessage(m);
+        console.log(`Found: ${JSON.stringify(m)}`);
+      },
+      (m) => {
+        setNearbyMessage('');
+        console.log(`Lost: ${JSON.stringify(m)}`);
+      },
     );
+    console.log('Subscribed!');
+  }, []);
+  const _checkPermissions = useCallback(async () => {
+    const permission = await checkBluetoothPermission();
+    const available = await checkBluetoothAvailability();
     Alert.alert(
-      'who u wanna be',
-      'Do you want to publish a message or subscribe to messages?',
-      [
-        {
-          text: 'Subscriber',
-          onPress: () => {
-            this.subscribe();
-          },
-        },
-        {
-          text: 'Publisher',
-          onPress: () => {
-            this.publish();
-          },
-        },
-        {
-          text: 'Only check Bluetooth Permission',
-          onPress: async () => {
-            const permission = await checkBluetoothPermission();
-            const available = await checkBluetoothAvailability();
-            Alert.alert(
-              'Bluetooth Permissions:',
-              `Granted: ${permission}, Available: ${available}`,
-            );
-          },
-        },
-      ],
+      'Bluetooth Permissions:',
+      `Granted: ${permission}, Available: ${available}`,
     );
-  }
+  }, []);
 
-  componentWillUnmount() {
-    this.listeners.forEach((l) => {
-      console.log(`unsubscribing listener ${l}`);
-      if (l) {
-        l();
-      }
-    });
-  }
+  useEffect(() => {
+    _connect();
 
-  async publish() {
-    this.listeners.push(
-      await connect({
-        apiKey: API_KEY,
-        discoveryModes: ['broadcast'],
-        discoveryMediums: ['ble'],
-      }),
-    );
-    this.listeners.push(await publish('TEST'));
-    this.setState({
-      status: 'Published!',
-    });
-  }
+    _checkPermissions();
+    _subscribe();
+    _publish();
 
-  async subscribe() {
-    this.listeners.push(
-      await connect({
-        apiKey: API_KEY,
-        discoveryModes: ['scan'],
-        discoveryMediums: ['ble'],
-      }),
-    );
-    this.listeners.push(
-      await subscribe(
-        (m) => {
-          this.setState({
-            message: `Found: ${JSON.stringify(m)}`,
-          });
-        },
-        (m) => {
-          this.setState({
-            message: `Lost: ${JSON.stringify(m)}`,
-          });
-        },
-      ),
-    );
-    this.setState({
-      status: 'Subscribed!',
-    });
-  }
+    return () => disconnect();
+  }, [_connect, _subscribe, _publish, _checkPermissions]);
 
-  render() {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.welcome}>☆GoogleNearbyMessages example☆</Text>
-        <Text style={styles.instructions}>STATUS: {this.state.status}</Text>
-        <Text style={styles.welcome}>☆NATIVE CALLBACK MESSAGE☆</Text>
-        <Text style={styles.instructions}>{this.state.message}</Text>
-      </View>
-    );
-  }
+  return (
+    <View style={styles.container}>
+      <Text style={styles.welcome}>☆GoogleNearbyMessages example☆</Text>
+      <Text style={styles.welcome}>Nearby Message:</Text>
+      <Text style={styles.instructions}>{nearbyMessage}</Text>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({

@@ -12,6 +12,7 @@
   "dependencies": {
     "react": "16.11.0",
     "react-native": "0.62.2",
+    "react-native-device-info": "^5.6.1",
     "react-native-google-nearby-messages": "link:../"
   },
   "devDependencies": {

@@ -6,6 +6,9 @@ const nearbyEventEmitter = new NativeEventEmitter(GoogleNearbyMessages);
 
 export type ErrorType = 'BLUETOOTH_ERROR' | 'PERMISSION_ERROR' | 'MESSAGE_NO_DATA_ERROR';
 export type EventType = 'MESSAGE_FOUND' | 'MESSAGE_LOST' | ErrorType;
+export type DiscoveryMode = 'broadcast' | 'scan';
+export type DiscoveryMedium = 'ble' | 'audio';
+export type DiscoveryMediumAndroid = 'bluetooth' | 'default' | 'none';
 interface BridgeMessageEvent {
   message?: string;
 }
@@ -25,6 +28,19 @@ interface BridgeErrorEvent {
 export async function connect(apiKey?: string): Promise<() => void> {
   if (Platform.OS === 'ios' && apiKey == null) throw new Error('API Key is required on iOS!');
   await GoogleNearbyMessages.connect(apiKey);
+  if (discoveryModes == null || discoveryModes.length === 0) {
+    discoveryModes = ['broadcast', 'scan'];
+  }
+  if (discoveryMediums == null || discoveryMediums.length === 0) {
+    discoveryMediums = ['ble'];
+  }
+  if (Platform.OS === 'ios') {
+    if (apiKey == null) throw new Error('API Key is required on iOS!');
+    // API Key only required on iOS
+    await GoogleNearbyMessages.connect(apiKey, discoveryModes, discoveryMediums);
+  } else {
+    await GoogleNearbyMessages.connect(discoveryModes, discoveryMediums);
+  }
   return () => GoogleNearbyMessages.disconnect();
 }
 

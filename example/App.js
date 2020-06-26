@@ -76,7 +76,13 @@ export default class App extends Component {
   }
 
   async publish() {
-    this.listeners.push(await connect(API_KEY, ['broadcast'], ['ble']));
+    this.listeners.push(
+      await connect({
+        apiKey: API_KEY,
+        discoveryModes: ['broadcast'],
+        discoveryMediums: ['ble'],
+      }),
+    );
     this.listeners.push(await publish('TEST'));
     this.setState({
       status: 'Published!',
@@ -84,7 +90,13 @@ export default class App extends Component {
   }
 
   async subscribe() {
-    this.listeners.push(await connect(API_KEY, ['scan'], ['ble']));
+    this.listeners.push(
+      await connect({
+        apiKey: API_KEY,
+        discoveryModes: ['scan'],
+        discoveryMediums: ['ble'],
+      }),
+    );
     this.listeners.push(
       await subscribe(
         (m) => {

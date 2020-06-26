@@ -30,9 +30,7 @@ import {getDeviceName} from 'react-native-device-info';
 const API_KEY = '<yourapikey>';
 
 export default function App() {
-  const [nearbyStatus, setNearbyStatus] = useState('connecting');
   const [nearbyMessage, setNearbyMessage] = useState('');
-  const deviceName = useMemo(() => getDeviceName(), []);
 
   useNearbyErrorCallback(
     useCallback((kind, message) => {
@@ -51,10 +49,11 @@ export default function App() {
     return () => disconnect();
   }, []);
   const _publish = useCallback(async () => {
+    const deviceName = await getDeviceName();
     console.log(`Publishing "${deviceName}"...`);
     await publish(deviceName);
     console.log(`Published "${deviceName}"!`);
-  }, [deviceName]);
+  }, []);
   const _subscribe = useCallback(async () => {
     console.log('Subscribing...');
     await subscribe(

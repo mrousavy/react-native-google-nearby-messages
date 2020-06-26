@@ -79,11 +79,18 @@ export default function App() {
 
   useEffect(() => {
     const start = async () => {
-      await _connect();
+      try {
+        await _checkPermissions();
 
-      await _checkPermissions();
-      await _subscribe();
-      await _publish();
+        await _connect();
+        await _subscribe();
+        await _publish();
+      } catch (e) {
+        Alert.alert(
+          'Unknown error occured while connecting!',
+          JSON.stringify(e.message ?? e),
+        );
+      }
     };
 
     start();

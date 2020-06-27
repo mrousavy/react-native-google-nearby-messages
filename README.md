@@ -191,3 +191,7 @@ If you're having any trouble getting the Nearby API working, please make sure yo
 If that doesn't help either, [create an issue](https://github.com/mrousavy/react-native-google-nearby-messages/issues).
 
 <a href='https://ko-fi.com/F1F8CLXG' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://az743702.vo.msecnd.net/cdn/kofi2.png?v=0' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
+
+## Resources
+
+* [This medium article](https://teabreak.e-spres-oh.com/swift-in-react-native-the-ultimate-guide-part-1-modules-9bb8d054db03)

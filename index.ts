@@ -110,7 +110,7 @@ export function disconnect(): void {
  * Subscribe to nearby message events. Use onMessageFound and onMessageLost to receive callbacks for found and lost messages. Always call unsubscribe() to stop publishing.
   * @param onMessageFound (Optional) A function to call when a new message has been found
   * @param onMessageLost  (Optional) A function to call when an existing message has been lost
- *  @returns A function to unsubscribe the subscription and the event emitters if supplied.
+ *  @returns A function to unsubscribe the subscription and remove the event emitters if supplied.
  *  @example
  *  const unsubscribe = await subscribe(
  *      (m) => console.log(`found: ${m}`),
@@ -131,10 +131,12 @@ export async function subscribe(onMessageFound?: (message?: string) => void, onM
 }
 
 /**
- * Unsubscribe the current subscription.
+ * Unsubscribe the current subscription. Also removes all event listeners for `MESSAGE_FOUND` and `MESSAGE_LOST`.
  */
 export function unsubscribe(): void {
   GoogleNearbyMessages.unsubscribe();
+  removeAllListeners('MESSAGE_FOUND');
+  removeAllListeners('MESSAGE_LOST');
 }
 
 /**
@@ -185,13 +187,13 @@ export function checkBluetoothAvailability(): Promise<boolean> {
  * @param callback The function to call when an error occurs. `kind` is the Error Type. e.g.: User turns Bluetooth off, callback gets called with ('BLUETOOTH_ERROR', true). When the User turns Bluetooth back on, callback gets called again with ('BLUETOOTH_ERROR', false).
  */
 export function addOnErrorListener(callback: (kind: ErrorType, message?: string) => void): () => void {
-  const bluetoothErrorUnsubscribe = onErrorEvent('BLUETOOTH_ERROR', (m) => callback('BLUETOOTH_ERROR', m));
-  const permissionErrorUnsubscribe = onErrorEvent('PERMISSION_ERROR', (m) => callback('PERMISSION_ERROR', m));
-  const messageNoDataErrorUnsubscribe = onErrorEvent('MESSAGE_NO_DATA_ERROR', (m) => callback('MESSAGE_NO_DATA_ERROR', m));
+  const listeners = [
+    onErrorEvent('BLUETOOTH_ERROR', (m) => callback('BLUETOOTH_ERROR', m)),
+    onErrorEvent('PERMISSION_ERROR', (m) => callback('PERMISSION_ERROR', m)),
+    onErrorEvent('MESSAGE_NO_DATA_ERROR', (m) => callback('MESSAGE_NO_DATA_ERROR', m)),
+  ];
   return () => {
-    bluetoothErrorUnsubscribe();
-    permissionErrorUnsubscribe();
-    messageNoDataErrorUnsubscribe();
+    listeners.map(l => l());
   };
 }
 
@@ -205,7 +207,9 @@ function onErrorEvent(event: ErrorType, callback: (message?: string) => void): (
   return () => subscription.remove();
 }
 
-
+function removeAllListeners(event: EventType): void {
+  nearbyEventEmitter.removeAllListeners(event);
+}
 
 
 // MARK: REACT HOOKS

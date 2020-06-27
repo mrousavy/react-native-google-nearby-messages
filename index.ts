@@ -242,7 +242,7 @@ export interface SearchState {
  * Publish a simple message and return the current status of the nearby API.
  *
  * Also calls `checkBluetoothAvailability()` and `checkBluetoothPermission()`.
- * @param config The Nearby API configuration object to use.
+ * @param config The Nearby API configuration object to use. **Warning: Use `useMemo(..)` for the Object, otherwise you get an infinite loop of re-renders!**
  * @param message The message to publish
  * @returns The current status of the Nearby API
  */
@@ -307,7 +307,7 @@ function reducer(messages: string[], payload: ReducerPayload): string[] {
  * Subscribe to nearby messages and return an instance of the `SubscriptionState` object.
  *
  * Also calls `checkBluetoothAvailability()` and `checkBluetoothPermission()`.
- * @param config The Nearby API configuration object to use.
+ * @param config The Nearby API configuration object to use. **Warning: Use `useMemo(..)` for the Object, otherwise you get an infinite loop of re-renders!**
  * @returns A state of all nearby messages
  */
 export function useNearbySubscription(config: NearbyConfig): SubscriptionState {
@@ -363,7 +363,7 @@ export function useNearbySubscription(config: NearbyConfig): SubscriptionState {
  * Search for a specific message using the nearby messages API. Returns an instance of the `SearchState` interface.
  *
  * Also calls `checkBluetoothAvailability()` and `checkBluetoothPermission()`.
- * @param config The Nearby API configuration object to use.
+ * @param config The Nearby API configuration object to use. **Warning: Use `useMemo(..)` for the Object, otherwise you get an infinite loop of re-renders!**
  * @param searchFor The string to perform the nearby search for
  * @returns A state whether the message has been found or not.
  */

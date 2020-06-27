@@ -132,13 +132,16 @@ const isBluetoothAvailable = await checkBluetoothAvailability();
 
 This library also provides react hooks for common use cases. In case you're not familiar with hooks, please read the [hooks documentation](https://reactjs.org/docs/hooks-intro.html). When the component unmounts, the hooks automatically stop publishing, subscribing, remove error listeners and disconnect for you. You can also look into the [hooks source code](https://github.com/mrousavy/react-native-google-nearby-messages/blob/master/index.ts#L140-L259) and tweak them for your use case.
 
+Make sure to memoize the `NearbyConfig` object using `useMemo`, otherwise the hooks will fall into an infinite loop of re-renders because the config object gets re-created each time and therefore _has changed_. (See: [react useEffect's deps](https://reactjs.org/docs/hooks-effect.html#tip-optimizing-performance-by-skipping-effects))
+
 #### useNearbyPublication
 
 Publishes a message and returns a state which describes the Nearby API status. (e.g.: `connecting`, `published`, `error`, ...)
 
 ```ts
 export default function App() {
-  const nearbyStatus = useNearbyPublication({ apiKey: GOOGLE_API_KEY }, 'Hello from Nearby!');
+  const nearbyConfig = useMemo<NearbyConfig>(() => { apiKey: GOOGLE_API_KEY }, []);
+  const nearbyStatus = useNearbyPublication(nearbyConfig, 'Hello from Nearby!');
   // ...
 }
 ```
@@ -149,7 +152,8 @@ Subscribe to nearby messages and return a state for all messages in an array, as
 
 ```tsx
 export default function App() {
-  const { nearbyMessages, nearbyStatus } = useNearbySubscription({ apiKey: GOOGLE_API_KEY });
+  const nearbyConfig = useMemo<NearbyConfig>(() => { apiKey: GOOGLE_API_KEY }, []);
+  const { nearbyMessages, nearbyStatus } = useNearbySubscription(nearbyConfig);
   return (
     <FlatList
       data={nearbyMessages}
@@ -165,7 +169,8 @@ Search for a specific message using nearby messages. The `isNearby` local specif
 
 ```tsx
 export default function App() {
-  const { isNearby, nearbyStatus } = useNearbySearch({ apiKey: GOOGLE_API_KEY }, 'iPhone 11');
+  const nearbyConfig = useMemo<NearbyConfig>(() => { apiKey: GOOGLE_API_KEY }, []);
+  const { isNearby, nearbyStatus } = useNearbySearch(nearbyConfig, 'iPhone 11');
   return (
     <Text>{isNearby ? 'iPhone 11 is nearby!' : 'iPhone 11 is far, far away.'}</Text>
   );

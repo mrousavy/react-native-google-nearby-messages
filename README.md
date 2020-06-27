@@ -140,7 +140,7 @@ Publishes a message and returns a state which describes the Nearby API status. (
 
 ```ts
 export default function App() {
-  const nearbyConfig = useMemo<NearbyConfig>(() => { apiKey: GOOGLE_API_KEY }, []);
+  const nearbyConfig = useMemo<NearbyConfig>(() => ({ apiKey: GOOGLE_API_KEY }), []);
   const nearbyStatus = useNearbyPublication(nearbyConfig, 'Hello from Nearby!');
   // ...
 }
@@ -152,7 +152,7 @@ Subscribe to nearby messages and return a state for all messages in an array, as
 
 ```tsx
 export default function App() {
-  const nearbyConfig = useMemo<NearbyConfig>(() => { apiKey: GOOGLE_API_KEY }, []);
+  const nearbyConfig = useMemo<NearbyConfig>(() => ({ apiKey: GOOGLE_API_KEY }), []);
   const { nearbyMessages, nearbyStatus } = useNearbySubscription(nearbyConfig);
   return (
     <FlatList
@@ -169,7 +169,7 @@ Search for a specific message using nearby messages. The `isNearby` local specif
 
 ```tsx
 export default function App() {
-  const nearbyConfig = useMemo<NearbyConfig>(() => { apiKey: GOOGLE_API_KEY }, []);
+  const nearbyConfig = useMemo<NearbyConfig>(() => ({ apiKey: GOOGLE_API_KEY }), []);
   const { isNearby, nearbyStatus } = useNearbySearch(nearbyConfig, 'iPhone 11');
   return (
     <Text>{isNearby ? 'iPhone 11 is nearby!' : 'iPhone 11 is far, far away.'}</Text>

@@ -245,6 +245,12 @@ export interface SearchState {
  * @param config The Nearby API configuration object to use. **Warning: Use `useMemo(..)` for the Object, otherwise you get an infinite loop of re-renders!**
  * @param message The message to publish
  * @returns The current status of the Nearby API
+ * @example
+ * export default function App() {
+ *   const nearbyConfig = useMemo<NearbyConfig>(() => ({ apiKey: GOOGLE_API_KEY }), []);
+ *   const nearbyStatus = useNearbyPublication(nearbyConfig, 'Hello from Nearby!');
+ *   // ...
+ * }
  */
 export function useNearbyPublication(config: NearbyConfig, message: string): NearbyStatus {
   const [nearbyStatus, setNearbyStatus] = useState<NearbyStatus>('connecting');
@@ -309,6 +315,17 @@ function reducer(messages: string[], payload: ReducerPayload): string[] {
  * Also calls `checkBluetoothAvailability()` and `checkBluetoothPermission()`.
  * @param config The Nearby API configuration object to use. **Warning: Use `useMemo(..)` for the Object, otherwise you get an infinite loop of re-renders!**
  * @returns A state of all nearby messages
+ * @example
+ * export default function App() {
+ *   const nearbyConfig = useMemo<NearbyConfig>(() => ({ apiKey: GOOGLE_API_KEY }), []);
+ *   const { nearbyMessages, nearbyStatus } = useNearbySubscription(nearbyConfig);
+ *   return (
+ *     <FlatList
+ *       data={nearbyMessages}
+ *       renderItem={({ item }) => <Text>{item}</Text>}
+ *       />
+ *   );
+ * }
  */
 export function useNearbySubscription(config: NearbyConfig): SubscriptionState {
   const [nearbyMessages, dispatch] = useReducer(reducer, []);
@@ -366,6 +383,14 @@ export function useNearbySubscription(config: NearbyConfig): SubscriptionState {
  * @param config The Nearby API configuration object to use. **Warning: Use `useMemo(..)` for the Object, otherwise you get an infinite loop of re-renders!**
  * @param searchFor The string to perform the nearby search for
  * @returns A state whether the message has been found or not.
+ * @example
+ * export default function App() {
+ *   const nearbyConfig = useMemo<NearbyConfig>(() => ({ apiKey: GOOGLE_API_KEY }), []);
+ *   const { isNearby, nearbyStatus } = useNearbySearch(nearbyConfig, 'iPhone 11');
+ *   return (
+ *     <Text>{isNearby ? 'iPhone 11 is nearby!' : 'iPhone 11 is far, far away.'}</Text>
+ *   );
+ * }
  */
 export function useNearbySearch(config: NearbyConfig, searchFor: string): SearchState {
   const [isNearby, setIsNearby] = useState(false);

@@ -70,7 +70,7 @@ class NearbyMessages: RCTEventEmitter {
 															self.sendEvent(withName: EventType.PERMISSION_ERROR.rawValue, body: [ "message": "Bluetooth Permission denied!" ])
 														}
 													}
-													
+
 
 		})
 		resolve(nil)
@@ -225,8 +225,8 @@ class NearbyMessages: RCTEventEmitter {
 
 	@objc
 	override static func requiresMainQueueSetup() -> Bool {
-		// init on background thread
-		return false
+		// init on main thread, audio doesn't work on background thread.
+		return true
 	}
 
 	// Called when the UIView gets destroyed (e.g. App reload)
@@ -235,7 +235,7 @@ class NearbyMessages: RCTEventEmitter {
 		print("GNM_BLE: invalidate")
 		disconnect()
 	}
-	
+
 	func parseDiscoveryMediums(_ discoveryMediums: Array<NSString>) -> GNSDiscoveryMediums {
 		var mediums = GNSDiscoveryMediums()
 		for medium in discoveryMediums {
@@ -253,8 +253,8 @@ class NearbyMessages: RCTEventEmitter {
 		}
 		return mediums.isEmpty ? defaultDiscoveryMediums : mediums
 	}
-	
-	
+
+
 	func parseDiscoveryModes(_ discoveryModes: Array<NSString>) -> GNSDiscoveryMode {
 		var modes = GNSDiscoveryMode()
 		for mode in discoveryModes {

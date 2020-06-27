@@ -74,7 +74,7 @@ interface BridgeErrorEvent {
 
 /**
  * Initialize and connect the Google Nearby Messages API
- * @param config The Nearby API configuration object to use.
+ * @param config The Nearby API configuration object to use. Default: `{ discoveryModes: ['broadcast', 'scan'], discoveryMediums: ['ble'] }`
  * @returns An unsubscriber function to disconnect the Google Nearby Messages API
  * @example
  * const disconnect = await connect(API_KEY, ['broadcast', 'scan'], ['ble', 'audio']);
@@ -91,7 +91,6 @@ export async function connect(config: NearbyConfig): Promise<() => void> {
   }
   if (Platform.OS === 'ios') {
     if (apiKey == null) throw new Error('API Key is required on iOS!');
-    // API Key only required on iOS
     await GoogleNearbyMessages.connect(apiKey, discoveryModes, discoveryMediums);
   } else {
     await GoogleNearbyMessages.connect(discoveryModes, discoveryMediums);
@@ -184,7 +183,7 @@ export function checkBluetoothAvailability(): Promise<boolean> {
 
 /**
  * Subscribe to any errors.
- * @param callback The function to call when an error occurs. `kind` is the Error Type. e.g.: User turns Bluetooth off, callback gets called with ('BLUETOOTH_ERROR', true). When the User turns Bluetooth back on, callback gets called again with ('BLUETOOTH_ERROR', false).
+ * @param callback The function to call when an error occurs. `kind` is the Error Type. e.g.: User turns Bluetooth off, callback gets called with ('BLUETOOTH_ERROR', "Bluetooth is powered off/unavailable!").
  */
 export function addOnErrorListener(callback: (kind: ErrorType, message?: string) => void): () => void {
   const listeners = [

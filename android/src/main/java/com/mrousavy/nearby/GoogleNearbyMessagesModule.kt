@@ -62,11 +62,11 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
         }
         _listener = object : MessageListener() {
             override fun onFound(message: Message) {
-                this.onFound(message)
+                handleOnFound(message)
             }
 
             override fun onLost(message: Message) {
-                this.onLost(message)
+                handleOnLost(message)
             }
         }
         val mediums = parseDiscoveryMediums(discoveryMediums)
@@ -227,7 +227,7 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
     }
 
     // Google Nearby Messages API Callbacks
-    fun onFound(message: Message) {
+    fun handleOnFound(message: Message) {
         if (message.content != null) {
             val messageString = String(message.content)
             Log.d(name, "GNM_BLE: Found message: $messageString")
@@ -237,7 +237,7 @@ class GoogleNearbyMessagesModule(reactContext: ReactApplicationContext) : ReactC
         }
     }
 
-    fun onLost(message: Message) {
+    fun handleOnLost(message: Message) {
         if (message.content != null) {
             val messageString = String(message.content)
             Log.d(name, "GNM_BLE: Lost message: $messageString")

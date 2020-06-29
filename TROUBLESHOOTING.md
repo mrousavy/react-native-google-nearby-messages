@@ -1,6 +1,19 @@
 # Troubleshooting
 
-The library isn't battle-tested for each scenario, so make sure you're aware of the following points:
+The library is a rather low-level API, so make sure you roughly understand what each functions does since there are a lot of wrong ways to use the API.
+
+## API Usage Notes
+
+* you need to call `connect(...)` before publishing or subscribing
+* you _can_ call `checkBluetoothPermissions()` and `checkBluetoothAvailability()` before any other calls to make sure bluetooth is available. (Use [react-native-permissions](https://github.com/react-native-community/react-native-permissions) to actually request permissions)
+* you need to manually call `disconnect(...)` to stop publishing, otherwise nearby subscribers will still see you as nearby even when you e.g. close the app.
+* it is recommended to use React Hooks, since those are cleaner code and less error-prone.
+  - when you are using hooks, be aware that you can only use a single hook in the same context at a time. (With the exception of the `useNearbyError` hook) This is because the Nearby Messages API is a global/singleton instance, so when you call `connect(...)` twice (which will happen if you have multiple hooks), an error gets thrown. You can write your custom Hooks if you inted on doing more complex logic.
+* all errors are thrown as Promise rejectors, so make sure you surround your calls with a try/catch. For error events, use the `addOnErrorListener(...)` function or `useNearbyError(...)` hook.
+
+## Troubleshooting
+
+If you're still having trouble, be aware of the following:
 
 1. The JS error codes (promise rejectors) should tell you enough information on what went wrong, check [this doc page](https://developers.google.com/android/reference/com/google/android/gms/nearby/messages/NearbyMessagesStatusCodes) on more information about each individual error code.
 2. If you are receiving seemingly random promise rejectors, it is likely that the metro bundler has caused some issues with the state cache. Try reloading the App. (pressing <kbd>r</kbd> in the metro bundler console)
@@ -49,5 +62,6 @@ The library isn't battle-tested for each scenario, so make sure you're aware of 
       end
     end
     ```
+9. Try debugging your app with Xcode/Android Studio. Native Logs get printed in the Logs/Logcat windows, and you can set breakpoints in the native code as well.
 
-If you're still having problems, [create an issue](https://github.com/mrousavy/react-native-google-nearby-messages/issues).
+If you're still having problems, [create an issue](https://github.com/mrousavy/react-native-google-nearby-messages/issues), I'm happy to help.

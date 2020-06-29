@@ -2,7 +2,7 @@
 
 The library isn't battle-tested for each scenario, so make sure you're aware of the following points:
 
-1. The JS error codes (promise rejectors) should tell you enough information on what went wrong, check [this doc page](https://developers.google.com/android/reference/com/google/android/gms/nearby/messages/NearbyMessagesStatusCodes) on more information about each individual error code.
+1. The JS error codes (promise rejectors) should tell you enough information on what went wrong, check [this doc page](https://developers.google.com/android/reference/com/google/android/gms/nearby/messages/NearbyMessagesStatusCodes) on more information about each individual error code. Note: if you are receiving seemingly random promise rejectors, it is likely that the bundle reloading has caused an issue on the device. Close out of the app and reopen it, if the problem still persists rebuilding the app should fix the problem.
 2. Make sure your device has BLE capabilities and the App has Permission to use those. Include the required Permissions in `Info.plist` and `AndroidManifest.xml`. Also try adding the `INTERNET`, `ACCESS_FINE_LOCATION` and `ACCESS_COARSE_LOCATION` permissions if nothing else works.
 3. Make sure your API Key is valid!
 4. The Nearby Messages API is available on Android devices with [Google Play services](https://developers.google.com/android/guides/overview) 7.8.0 or higher. Devices running Android 2.3 or higher that have the Google Play Store app automatically receive updates to Google Play services. To check which version of Google Play services is installed on your device, go to **Settings > Apps > Google Play services**. See: [here](https://developers.google.com/nearby/messages/android/get-started)

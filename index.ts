@@ -146,9 +146,9 @@ export function unsubscribe(): void {
  * @example
  * const unpublish = await publish('test');
  * // ...
- * unpublish();
+ * await unpublish();
  */
-export async function publish(message: string): Promise<() => void> {
+export async function publish(message: string): Promise<() => Promise<void>> {
   await GoogleNearbyMessages.publish(message);
   return () => unpublish();
 }
@@ -156,8 +156,8 @@ export async function publish(message: string): Promise<() => void> {
 /**
  * Stop publishing the last message. Can only call after @see publish has been called.
  */
-export function unpublish(): void {
-  GoogleNearbyMessages.unpublish();
+export function unpublish(): Promise<void> {
+  return GoogleNearbyMessages.unpublish();
 }
 
 /**
